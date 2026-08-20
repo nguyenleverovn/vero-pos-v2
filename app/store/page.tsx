@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { canManageMembers, canManageStore, StoreRole } from "@/lib/permissions";
+import { LogoutButton } from "@/components/LogoutButton";
 import styles from "./StoreProfile.module.css";
 
 type StoreProfile = {
@@ -202,6 +203,7 @@ export default function StoreProfilePage() {
           </div>
         </section>
       )}
+      {!isNew && <LogoutButton className={styles.mobileLogout} />}
     </main>
   );
 }
