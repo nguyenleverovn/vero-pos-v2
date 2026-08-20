@@ -6,15 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "db:migrate": "node scripts/migrate.mjs",
+    "invite:create": "node scripts/create-invite.mjs"
   },
   "dependencies": {
+    "google-auth-library": "^11.0.2",
     "next": "16.3.1",
+    "pg": "^8.23.0",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.8",
+    "@types/pg": "^8.23.1",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.3",
     "autoprefixer": "^10.4.19",

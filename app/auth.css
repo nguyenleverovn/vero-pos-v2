@@ -1,0 +1,50 @@
+.vp-auth {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(192, 57, 43, .08), transparent 32%),
+    radial-gradient(circle at 90% 90%, rgba(61, 43, 31, .09), transparent 36%),
+    var(--vp-background);
+}
+
+.vp-auth-card {
+  width: min(100%, 460px);
+  border: 1px solid var(--vp-border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 20px 60px rgba(61, 43, 31, .10);
+  padding: 28px;
+}
+
+.vp-auth-logo { display: block; width: min(260px, 80%); height: auto; margin: 0 auto 24px; }
+.vp-auth-heading { margin-bottom: 24px; text-align: center; }
+.vp-auth-heading h1 { margin: 0; color: var(--vp-primary); font-size: 28px; line-height: 1.15; }
+.vp-auth-heading p { margin: 8px 0 0; color: var(--vp-muted); font-size: 14px; line-height: 1.45; }
+.vp-auth-form { display: grid; gap: 16px; }
+.vp-auth-field { display: grid; gap: 7px; }
+.vp-auth-field span { color: var(--vp-primary); font-size: 13px; font-weight: 800; }
+.vp-auth-field input {
+  width: 100%;
+  min-height: 50px;
+  border: 1px solid var(--vp-border);
+  border-radius: 12px;
+  background: white;
+  padding: 0 14px;
+  color: var(--vp-text);
+  outline: none;
+}
+.vp-auth-field input:focus { border-color: var(--vp-primary); box-shadow: 0 0 0 3px rgba(61, 43, 31, .08); }
+.vp-auth-message { margin: 0; border-radius: 10px; padding: 11px 12px; background: var(--vp-danger-soft); color: var(--vp-action); font-size: 13px; font-weight: 700; }
+.vp-auth-submit { margin-top: 4px; }
+.vp-auth-switch { margin: 18px 0 0; color: var(--vp-muted); text-align: center; font-size: 13px; }
+.vp-auth-switch a { color: var(--vp-action); font-weight: 800; text-decoration: none; }
+.vp-auth-switch--primary { margin-top: 24px; font-size: 18px; }
+.vp-auth-switch--primary a { display: inline-block; padding: 6px 10px; }
+.vp-auth-back { display: block; margin-top: 16px; color: var(--vp-muted); text-align: center; font-size: 12px; text-decoration: none; }
+.vp-welcome-register { margin-top: 14px; color: var(--vp-primary); font-size: 14px; font-weight: 800; text-decoration: none; }
+
+@media (min-width: 768px) {
+  .vp-auth-card { padding: 38px 42px; }
+}
