@@ -15,6 +15,9 @@ export type ShiftSummary = {
   orderCount: number;
   revenueVnd: number;
   averageOrderVnd: number;
+  closedByUserId?: string;
+  closedByDisplayName?: string;
+  closedByRole?: "owner" | "manager" | "cashier";
 };
 
 type ShiftSummarySetting = {
@@ -34,7 +37,11 @@ export async function loadShiftSummaries(): Promise<ShiftSummary[]> {
   return [...(setting?.summaries ?? [])].sort((left, right) => right.closedAt.localeCompare(left.closedAt));
 }
 
-export async function closeCurrentShift(orders: PosOrder[], now = new Date()): Promise<ShiftSummary | null> {
+export async function closeCurrentShift(
+  orders: PosOrder[],
+  operator?: { userId: string; displayName: string; role: "owner" | "manager" | "cashier" },
+  now = new Date()
+): Promise<ShiftSummary | null> {
   const summaries = await loadShiftSummaries();
   const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const latestClosedAt = summaries[0] ? new Date(summaries[0].closedAt) : dayStart;
@@ -53,7 +60,10 @@ export async function closeCurrentShift(orders: PosOrder[], now = new Date()): P
     closedAt: now.toISOString(),
     orderCount: shiftOrders.length,
     revenueVnd,
-    averageOrderVnd: Math.round(revenueVnd / shiftOrders.length)
+    averageOrderVnd: Math.round(revenueVnd / shiftOrders.length),
+    closedByUserId: operator?.userId,
+    closedByDisplayName: operator?.displayName,
+    closedByRole: operator?.role
   };
   const database = await openVeroPosDatabase();
   const transaction = database.transaction(STORES.settings, "readwrite");

@@ -25,13 +25,15 @@
 }
 
 .heading h1 { margin: 0; color: var(--vp-primary); font-size: 26px; }
+.heading h2 { margin: 0; color: var(--vp-primary); font-size: 22px; }
 .heading p { margin: 6px 0 0; color: var(--vp-muted); font-size: 14px; line-height: 1.5; }
 .back { color: var(--vp-action); font-size: 13px; font-weight: 800; text-decoration: none; white-space: nowrap; }
 .form { display: grid; gap: 18px; }
 .field { display: grid; gap: 8px; }
 .field span { color: var(--vp-primary); font-size: 13px; font-weight: 800; }
 .field input,
-.field textarea { width: 100%; border: 1px solid var(--vp-border); border-radius: 12px; outline: none; background: white; padding: 14px 16px; color: var(--vp-text); font: inherit; }
+.field textarea,
+.field select { width: 100%; border: 1px solid var(--vp-border); border-radius: 12px; outline: none; background: white; padding: 14px 16px; color: var(--vp-text); font: inherit; }
 .field input { min-height: 52px; }
 .field textarea { min-height: 96px; resize: vertical; line-height: 1.45; }
 .field input:focus,
@@ -43,11 +45,38 @@
 .error { margin: 0; color: var(--vp-action); font-size: 13px; font-weight: 700; }
 .submit { min-height: 56px; border: 0; border-radius: 12px; background: var(--vp-action); color: white; font: inherit; font-weight: 900; cursor: pointer; }
 .submit:disabled { opacity: .5; cursor: not-allowed; }
+.membersCard { margin-top: 20px; }
+.memberForm { display: grid; gap: 14px; }
+.addMember { min-height: 52px; border: 0; border-radius: 12px; background: var(--vp-primary); color: white; font: inherit; font-weight: 900; cursor: pointer; }
+.addMember:disabled { opacity: .5; cursor: not-allowed; }
+.memberList { display: grid; gap: 10px; margin-top: 20px; }
+.member { display: grid; gap: 12px; border: 1px solid var(--vp-border); border-radius: 14px; padding: 14px; }
+.memberDisabled { background: #f4efe9; opacity: .72; }
+.memberIdentity { display: grid; gap: 3px; min-width: 0; }
+.memberIdentity strong { color: var(--vp-primary); font-size: 14px; }
+.memberIdentity span { overflow: hidden; color: var(--vp-muted); font-size: 12px; text-overflow: ellipsis; }
+.member select { min-height: 42px; border: 1px solid var(--vp-border); border-radius: 10px; background: white; padding: 0 10px; color: var(--vp-text); font: inherit; font-size: 13px; font-weight: 700; }
+.ownerBadge { align-self: center; justify-self: start; border-radius: 999px; background: #f2ece4; padding: 8px 12px; color: var(--vp-primary); font-size: 12px; font-weight: 800; }
+.disableMember,
+.enableMember,
+.resetMember { min-height: 40px; border-radius: 10px; padding: 0 10px; font: inherit; font-size: 10px; font-weight: 900; cursor: pointer; }
+.disableMember { border: 1px solid var(--vp-border); background: white; color: var(--vp-action); }
+.enableMember { border: 0; background: var(--vp-primary); color: white; }
+.resetMember { border: 1px solid var(--vp-border); background: #f4efe9; color: var(--vp-primary); }
+.memberActions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.resetPanel { display: grid; grid-column: 1 / -1; grid-template-columns: 1fr auto; gap: 8px; }
+.resetPanel input { min-height: 42px; min-width: 0; border: 1px solid var(--vp-border); border-radius: 10px; padding: 0 10px; font: inherit; }
+.resetPanel button { border: 0; border-radius: 10px; background: var(--vp-action); color: white; padding: 0 12px; font: inherit; font-size: 10px; font-weight: 900; }
+.disableMember:disabled,
+.enableMember:disabled { opacity: .5; cursor: not-allowed; }
 
 @media (min-width: 768px) {
   .screen { padding: 48px 32px; }
   .card { padding: 38px 42px; }
   .form { grid-template-columns: 1fr 1fr; }
+  .memberForm { grid-template-columns: 1fr 1fr 130px 150px; align-items: end; }
+  .memberForm .addMember { grid-column: 1 / -1; }
+  .member { grid-template-columns: minmax(0, 1fr) 130px 220px; align-items: center; }
   .fieldAddress,
   .role,
   .message,

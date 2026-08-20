@@ -32,6 +32,7 @@ export default function ReportsPage() {
   const [shiftSummaries, setShiftSummaries] = useState<ShiftSummary[]>([]);
   const [closingShift, setClosingShift] = useState(false);
   const [shiftMessage, setShiftMessage] = useState("");
+  const [operator, setOperator] = useState<{ userId: string; displayName: string; role: "owner" | "manager" | "cashier" } | undefined>();
   const [rangeOpen, setRangeOpen] = useState(false);
   const [rangeStart, setRangeStart] = useState("");
   const [rangeEnd, setRangeEnd] = useState("");
@@ -57,10 +58,15 @@ export default function ReportsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadOrders(), loadShiftSummaries()]).then(([savedOrders, savedSummaries]) => {
+    Promise.all([
+      loadOrders(),
+      loadShiftSummaries(),
+      fetch("/api/auth/me", { cache: "no-store" }).then((response) => response.ok ? response.json() : null)
+    ]).then(([savedOrders, savedSummaries, account]) => {
       if (!cancelled) {
         setOrders(savedOrders);
         setShiftSummaries(savedSummaries);
+        if (account?.user && account?.stores?.[0]) setOperator({ userId: account.user.id, displayName: account.user.displayName, role: account.stores[0].role });
         setLoaded(true);
       }
     });
@@ -92,7 +98,7 @@ export default function ReportsPage() {
     setClosingShift(true);
     setShiftMessage("");
     try {
-      const closedShift = await closeCurrentShift(orders);
+      const closedShift = await closeCurrentShift(orders, operator);
       if (!closedShift) {
         setShiftMessage("Chưa có đơn mới kể từ lần tổng kết gần nhất.");
         return;
@@ -147,7 +153,7 @@ export default function ReportsPage() {
             <div className="vp-shift-list">
               {group.summaries.map((item) => (
                 <article key={item.id}>
-                  <div><strong>{new Date(item.startedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} - {new Date(item.closedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</strong><span>{item.orderCount} đơn · Trung bình {item.averageOrderVnd.toLocaleString("vi-VN")}đ</span></div>
+                  <div><strong>{new Date(item.startedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} - {new Date(item.closedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</strong><span>{item.closedByDisplayName ? `Nhân viên kết ca: ${item.closedByDisplayName} · ` : ""}{item.orderCount} đơn · Trung bình {item.averageOrderVnd.toLocaleString("vi-VN")}đ</span></div>
                   <b>{item.revenueVnd.toLocaleString("vi-VN")}đ</b>
                 </article>
               ))}

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import styles from "./GoogleAuthForm.module.css";
 
 type GoogleCredentialResponse = { credential: string };
@@ -41,6 +41,9 @@ export function GoogleAuthForm() {
   const buttonRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [pin, setPin] = useState("");
+  const [staffSubmitting, setStaffSubmitting] = useState(false);
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
   const submitCredential = useCallback(async (credential: string) => {
@@ -112,6 +115,26 @@ export function GoogleAuthForm() {
     };
   }, [clientId, renderGoogleButton]);
 
+  async function submitStaffLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setStaffSubmitting(true);
+    try {
+      const response = await fetch("/api/auth/staff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, pin })
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Chưa thể đăng nhập nhân viên.");
+      router.push("/");
+      router.refresh();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Chưa thể đăng nhập nhân viên.");
+      setStaffSubmitting(false);
+    }
+  }
+
   return (
     <main className="vp-auth">
       <section className="vp-auth-card" aria-labelledby="auth-title">
@@ -130,12 +153,19 @@ export function GoogleAuthForm() {
         </div>
 
         <div className="vp-auth-form">
+          <p className={styles.sectionLabel}>CHỦ CỬA HÀNG</p>
           <div className={styles.googleArea} aria-busy={submitting}>
             {clientId ? <div className={styles.googleButton} ref={buttonRef} /> : (
               <p className={styles.error}>Đăng nhập Google chưa được cấu hình.</p>
             )}
             {submitting ? <p className={styles.note}>Đang xác minh...</p> : null}
           </div>
+          <div className={styles.divider}><span>NHÂN VIÊN</span></div>
+          <form className={styles.staffForm} onSubmit={submitStaffLogin}>
+            <label><span>Số điện thoại</span><input value={phone} onChange={(event) => setPhone(event.target.value)} inputMode="tel" autoComplete="tel" placeholder="090 123 4567" required /></label>
+            <label><span>PIN 6 số</span><input value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" type="password" autoComplete="current-password" placeholder="••••••" pattern="[0-9]{6}" required /></label>
+            <button type="submit" disabled={staffSubmitting || pin.length !== 6}>{staffSubmitting ? "ĐANG ĐĂNG NHẬP..." : "ĐĂNG NHẬP NHÂN VIÊN"}</button>
+          </form>
           {error ? <p className={styles.error} role="alert">{error}</p> : null}
         </div>
       </section>

@@ -11,3 +11,7 @@ export function canManageMenu(role: StoreRole | null) {
 export function canRestoreData(role: StoreRole | null) {
   return role === "owner";
 }
+
+export function canManageMembers(role: StoreRole | null) {
+  return role === "owner";
+}
