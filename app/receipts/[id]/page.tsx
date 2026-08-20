@@ -62,7 +62,6 @@ export default function ReceiptDetailPage() {
       <section className={`${styles.receipt} ${styles.printOnly}`} aria-label="Hóa đơn VERO POS">
         <header className={styles.header}>
           <h1>{store?.name || "VERO POS"}</h1>
-          {store?.address && <p>{store.address}</p>}
           {store?.phone && <p>Điện thoại: {store.phone}</p>}
         </header>
         <div className={styles.meta}>
@@ -86,7 +85,7 @@ export default function ReceiptDetailPage() {
           <strong>Cảm ơn anh chị và hẹn gặp lại!</strong>
           {store?.phone && <span>Điện thoại: {store.phone}</span>}
           {store?.address && <span>{store.address}</span>}
-          <small>Powered by Vero SOL</small>
+          <small>Powered by Vero Coffee</small>
         </footer>
       </section>
     )}
