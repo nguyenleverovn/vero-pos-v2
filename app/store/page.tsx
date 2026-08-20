@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { canManageStore, StoreRole } from "@/lib/permissions";
+import { canManageMembers, canManageStore, StoreRole } from "@/lib/permissions";
 import styles from "./StoreProfile.module.css";
 
 type StoreProfile = {
@@ -12,6 +12,14 @@ type StoreProfile = {
   phone: string | null;
   address: string | null;
   role: StoreRole;
+};
+
+type StoreMember = {
+  userId: string;
+  displayName: string;
+  email: string | null;
+  role: StoreRole;
+  status: "active" | "disabled";
 };
 
 const ROLE_LABELS: Record<StoreRole, string> = {
@@ -30,6 +38,19 @@ export default function StoreProfilePage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [members, setMembers] = useState<StoreMember[]>([]);
+  const [memberEmail, setMemberEmail] = useState("");
+  const [memberRole, setMemberRole] = useState<"manager" | "cashier">("cashier");
+  const [memberBusy, setMemberBusy] = useState("");
+  const [memberMessage, setMemberMessage] = useState("");
+  const [memberError, setMemberError] = useState("");
+
+  async function loadMembers(storeId: string) {
+    const response = await fetch(`/api/stores/members?storeId=${encodeURIComponent(storeId)}`, { cache: "no-store" });
+    const payload = await response.json().catch(() => ({})) as { members?: StoreMember[]; error?: string };
+    if (!response.ok) throw new Error(payload.error || "Chưa thể tải danh sách nhân viên.");
+    setMembers(payload.members ?? []);
+  }
 
   useEffect(() => {
     setIsNew(new URLSearchParams(window.location.search).get("new") === "1");
@@ -42,6 +63,7 @@ export default function StoreProfilePage() {
         setName(current.name);
         setPhone(current.phone ?? "");
         setAddress(current.address ?? "");
+        if (canManageMembers(current.role)) void loadMembers(current.id).catch((caught) => setMemberError(caught instanceof Error ? caught.message : "Chưa thể tải danh sách nhân viên."));
       })
       .catch((caught) => setError(caught instanceof Error ? caught.message : "Chưa thể tải cửa hàng."));
   }, []);
@@ -74,6 +96,53 @@ export default function StoreProfilePage() {
     }
   }
 
+  async function handleAddMember(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!store || !canManageMembers(store.role)) return;
+    setMemberBusy("new");
+    setMemberMessage("");
+    setMemberError("");
+    try {
+      const response = await fetch("/api/stores/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId: store.id, email: memberEmail, role: memberRole })
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Chưa thể thêm nhân viên.");
+      setMemberEmail("");
+      setMemberRole("cashier");
+      await loadMembers(store.id);
+      setMemberMessage("Đã cấp quyền. Nhân viên có thể đăng nhập bằng Gmail này.");
+    } catch (caught) {
+      setMemberError(caught instanceof Error ? caught.message : "Chưa thể thêm nhân viên.");
+    } finally {
+      setMemberBusy("");
+    }
+  }
+
+  async function updateMember(member: StoreMember, role: "manager" | "cashier", status: "active" | "disabled") {
+    if (!store || !canManageMembers(store.role)) return;
+    setMemberBusy(member.userId);
+    setMemberMessage("");
+    setMemberError("");
+    try {
+      const response = await fetch("/api/stores/members", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId: store.id, userId: member.userId, role, status })
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Chưa thể cập nhật quyền.");
+      await loadMembers(store.id);
+      setMemberMessage(status === "disabled" ? "Đã ngừng quyền truy cập của nhân viên." : "Đã cập nhật quyền nhân viên.");
+    } catch (caught) {
+      setMemberError(caught instanceof Error ? caught.message : "Chưa thể cập nhật quyền.");
+    } finally {
+      setMemberBusy("");
+    }
+  }
+
   const editable = canManageStore(store?.role ?? null);
 
   return (
@@ -93,6 +162,35 @@ export default function StoreProfilePage() {
           {editable && <button className={styles.submit} type="submit" disabled={busy || !name.trim() || !phone.trim() || !address.trim()}>{busy ? "ĐANG LƯU..." : isNew ? "LƯU VÀ THÊM MÓN" : "LƯU THÔNG TIN"}</button>}
         </form>
       </section>
+      {store && canManageMembers(store.role) && !isNew && (
+        <section className={`${styles.card} ${styles.membersCard}`}>
+          <header className={styles.heading}>
+            <div><h2>Nhân viên & phân quyền</h2><p>Thêm bằng Gmail. Chỉ chủ cửa hàng được thay đổi quyền.</p></div>
+          </header>
+          <form className={styles.memberForm} onSubmit={handleAddMember}>
+            <label className={styles.field}><span>Gmail nhân viên</span><input type="email" value={memberEmail} onChange={(event) => setMemberEmail(event.target.value)} placeholder="nhanvien@gmail.com" maxLength={254} required /></label>
+            <label className={styles.field}><span>Vai trò</span><select value={memberRole} onChange={(event) => setMemberRole(event.target.value as "manager" | "cashier")}><option value="cashier">Thu ngân</option><option value="manager">Quản lý</option></select></label>
+            <button className={styles.addMember} type="submit" disabled={memberBusy === "new" || !memberEmail.trim()}>{memberBusy === "new" ? "ĐANG THÊM..." : "THÊM NHÂN VIÊN"}</button>
+          </form>
+          {memberMessage && <p className={styles.message} role="status">{memberMessage}</p>}
+          {memberError && <p className={styles.error} role="alert">{memberError}</p>}
+          <div className={styles.memberList}>
+            {members.map((member) => (
+              <article className={`${styles.member} ${member.status === "disabled" ? styles.memberDisabled : ""}`} key={member.userId}>
+                <div className={styles.memberIdentity}><strong>{member.displayName}</strong><span>{member.email}</span></div>
+                {member.role === "owner" ? (
+                  <span className={styles.ownerBadge}>Chủ cửa hàng</span>
+                ) : (
+                  <>
+                    <select aria-label={`Vai trò của ${member.email}`} value={member.role} disabled={memberBusy === member.userId || member.status === "disabled"} onChange={(event) => void updateMember(member, event.target.value as "manager" | "cashier", member.status)}><option value="cashier">Thu ngân</option><option value="manager">Quản lý</option></select>
+                    <button className={member.status === "active" ? styles.disableMember : styles.enableMember} type="button" disabled={memberBusy === member.userId} onClick={() => void updateMember(member, member.role as "manager" | "cashier", member.status === "active" ? "disabled" : "active")}>{memberBusy === member.userId ? "ĐANG LƯU..." : member.status === "active" ? "NGỪNG QUYỀN" : "CẤP LẠI QUYỀN"}</button>
+                  </>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

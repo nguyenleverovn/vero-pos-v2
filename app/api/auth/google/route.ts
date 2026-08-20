@@ -42,6 +42,11 @@ export async function POST(request: Request) {
         [googleSubject]
       );
       if (!identity.rows[0]) return null;
+      const activeMembership = await client.query(
+        "SELECT 1 FROM store_memberships WHERE user_id = $1 AND status = 'active' LIMIT 1",
+        [identity.rows[0].user_id]
+      );
+      if (!activeMembership.rows[0]) throw new AuthError("Tài khoản chưa được cửa hàng cấp quyền.", 403);
       const token = await issueSession(client, identity.rows[0].user_id);
       return { userId: identity.rows[0].user_id, token };
     });
@@ -85,6 +90,12 @@ export async function POST(request: Request) {
           LIMIT 1`,
         [userId]
       );
+
+      const disabledMembership = !membership.rows[0] ? await client.query(
+        "SELECT 1 FROM store_memberships WHERE user_id = $1 AND status = 'disabled' LIMIT 1",
+        [userId]
+      ) : null;
+      if (disabledMembership?.rows[0]) throw new AuthError("Tài khoản chưa được cửa hàng cấp quyền.", 403);
 
       let storeId = membership.rows[0]?.store_id;
       let isNewAccount = false;
