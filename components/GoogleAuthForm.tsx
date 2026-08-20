@@ -54,7 +54,7 @@ export function GoogleAuthForm() {
       });
       const payload = await response.json().catch(() => ({})) as { error?: string; isNewAccount?: boolean };
       if (!response.ok) throw new Error(payload.error || "Chưa thể đăng nhập.");
-      router.push(payload.isNewAccount ? "/setup" : "/");
+      router.push(payload.isNewAccount ? "/store?new=1" : "/");
       router.refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Chưa thể đăng nhập.");

@@ -6,12 +6,24 @@ import { useEffect, useState } from "react";
 import { formatOrderCode, loadOrder, PosOrder } from "@/lib/repositories/orderRepository";
 import styles from "../../checkout/print-receipt.module.css";
 
+type StoreProfile = { name: string; phone: string | null; address: string | null };
+
 export default function ReceiptDetailPage() {
   const [order, setOrder] = useState<PosOrder | null | undefined>(undefined);
+  const [store, setStore] = useState<StoreProfile | null>(null);
 
   useEffect(() => {
     const orderId = decodeURIComponent(window.location.pathname.split("/").pop() ?? "");
-    loadOrder(orderId).then((savedOrder) => setOrder(savedOrder ?? null));
+    Promise.all([
+      loadOrder(orderId),
+      fetch("/api/auth/me", { cache: "no-store" })
+        .then((response) => response.ok ? response.json() : null)
+        .then((account: { stores?: StoreProfile[] } | null) => account?.stores?.[0] ?? null)
+        .catch(() => null)
+    ]).then(([savedOrder, currentStore]) => {
+      setOrder(savedOrder ?? null);
+      setStore(currentStore);
+    });
   }, []);
 
   if (order === undefined) return <main className="vp-screen vp-screen--plain" />;
@@ -49,8 +61,9 @@ export default function ReceiptDetailPage() {
     {order && (
       <section className={`${styles.receipt} ${styles.printOnly}`} aria-label="Hóa đơn VERO POS">
         <header className={styles.header}>
-          <h1>VERO POS</h1>
-          <p>Mỗi Ngày Ít Nhất 100 ly nhé!</p>
+          <h1>{store?.name || "VERO POS"}</h1>
+          {store?.address && <p>{store.address}</p>}
+          {store?.phone && <p>Điện thoại: {store.phone}</p>}
         </header>
         <div className={styles.meta}>
           <p><span>Đơn:</span><strong>{formatOrderCode(order.orderNumber)}</strong></p>
@@ -71,8 +84,8 @@ export default function ReceiptDetailPage() {
         <p className={styles.payment}>Thanh toán: {order.paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản"}</p>
         <footer className={styles.footer}>
           <strong>Cảm ơn anh chị và hẹn gặp lại!</strong>
-          <span>Hotline: 028 6290 0001</span>
-          <span>pos@verocoffeeshop.vn</span>
+          {store?.phone && <span>Điện thoại: {store.phone}</span>}
+          {store?.address && <span>{store.address}</span>}
           <small>Powered by Vero SOL</small>
         </footer>
       </section>
