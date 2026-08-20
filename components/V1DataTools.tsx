@@ -2,17 +2,34 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { createBackup, parseBackup, restoreBackup } from "@/lib/repositories/backupRepository";
+import { exportMenuCsv, exportOrdersCsv, importMenuCsv } from "@/lib/repositories/csvRepository";
 import { getInstallPrompt, setInstallPrompt } from "@/lib/pwa/installPrompt";
 import { useStoreRole } from "@/lib/client/useStoreRole";
-import { canRestoreData } from "@/lib/permissions";
+import { canManageMenu, canRestoreData } from "@/lib/permissions";
 
 function backupFileName() {
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   return `vero-pos-backup-${stamp}.json`;
 }
 
+function datedFileName(prefix: string, extension: string) {
+  const date = new Date().toISOString().slice(0, 10);
+  return `${prefix}-${date}.${extension}`;
+}
+
+function downloadFile(content: string, fileName: string, type: string) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 export function V1DataTools() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const menuInputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [online, setOnline] = useState(true);
@@ -20,6 +37,7 @@ export function V1DataTools() {
   const [installed, setInstalled] = useState(false);
   const role = useStoreRole();
   const canRestore = canRestoreData(role);
+  const canImportMenu = canManageMenu(role);
 
   useEffect(() => {
     const refresh = () => {
@@ -53,16 +71,52 @@ export function V1DataTools() {
     setMessage("");
     try {
       const backup = await createBackup();
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = backupFileName();
-      link.click();
-      URL.revokeObjectURL(url);
+      downloadFile(JSON.stringify(backup, null, 2), backupFileName(), "application/json");
       setMessage("Đã tạo bản sao lưu đầy đủ.");
     } catch {
       setMessage("Không thể tạo bản sao lưu. Vui lòng thử lại.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleMenuExport() {
+    setBusy(true);
+    setMessage("");
+    try {
+      downloadFile(await exportMenuCsv(), datedFileName("vero-pos-menu", "csv"), "text/csv;charset=utf-8");
+      setMessage("Đã xuất menu CSV.");
+    } catch {
+      setMessage("Không thể xuất menu CSV.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleOrdersExport() {
+    setBusy(true);
+    setMessage("");
+    try {
+      downloadFile(await exportOrdersCsv(), datedFileName("vero-pos-don-hang", "csv"), "text/csv;charset=utf-8");
+      setMessage("Đã xuất đơn hàng CSV.");
+    } catch {
+      setMessage("Không thể xuất đơn hàng CSV.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleMenuImport(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !canImportMenu) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      const result = await importMenuCsv(await file.text());
+      setMessage(`Đã nhập menu: thêm ${result.created} món, cập nhật ${result.updated} món, thêm ${result.categoriesAdded} danh mục.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không thể nhập menu CSV.");
     } finally {
       setBusy(false);
     }
@@ -103,6 +157,27 @@ export function V1DataTools() {
           <strong>Sao lưu dữ liệu</strong>
           <span>Sản phẩm, danh mục, thiết lập và hóa đơn</span>
           <button type="button" onClick={handleBackup} disabled={busy}>Xuất file backup</button>
+        </article>
+        <article className="vp-tool-card">
+          <strong>Xuất Menu CSV</strong>
+          <span>Mở bằng Excel hoặc Google Sheets</span>
+          <button type="button" onClick={handleMenuExport} disabled={busy}>Tải menu.csv</button>
+        </article>
+        <article className="vp-tool-card">
+          <strong>Xuất Đơn hàng CSV</strong>
+          <span>Dùng để đối soát và làm báo cáo</span>
+          <button type="button" onClick={handleOrdersExport} disabled={busy}>Tải đơn hàng.csv</button>
+        </article>
+        {canImportMenu && <article className="vp-tool-card">
+          <strong>Nhập Menu CSV</strong>
+          <span>Gộp món mới và cập nhật món trùng, không xóa dữ liệu cũ</span>
+          <button type="button" onClick={() => menuInputRef.current?.click()} disabled={busy}>Chọn menu.csv</button>
+          <input ref={menuInputRef} type="file" accept="text/csv,.csv" onChange={handleMenuImport} hidden />
+        </article>}
+        <article className="vp-tool-card">
+          <strong>Lưu trên Google Drive</strong>
+          <span>Xuất file trước, sau đó tải file lên Drive của bạn</span>
+          <button type="button" onClick={() => window.open("https://drive.google.com/drive/my-drive", "_blank", "noopener,noreferrer")}>Mở Google Drive</button>
         </article>
         {canRestore && <article className="vp-tool-card vp-tool-card--danger">
           <strong>Khôi phục dữ liệu</strong>
