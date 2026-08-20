@@ -1,0 +1,28 @@
+.googleArea {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  min-height: 44px;
+  width: 100%;
+}
+
+.googleButton {
+  min-height: 44px;
+  width: 100%;
+}
+
+.note {
+  color: #7a6b62;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+  text-align: center;
+}
+
+.error {
+  color: #a3392d;
+  font-size: 14px;
+  line-height: 1.45;
+  margin: 0;
+  text-align: center;
+}

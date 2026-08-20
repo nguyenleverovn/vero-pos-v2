@@ -1,5 +1,5 @@
-import { AuthForm } from "@/components/AuthForm";
+import { GoogleAuthForm } from "@/components/GoogleAuthForm";
 
 export default function RegisterPage() {
-  return <AuthForm mode="register" />;
+  return <GoogleAuthForm mode="register" />;
 }
