@@ -1,3 +1,7 @@
+.vp-app-frame:has(.vp-auth) {
+  display: block;
+}
+
 .vp-auth {
   min-height: 100dvh;
   display: grid;
