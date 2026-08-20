@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { DatabaseClient, getPool } from "@/lib/server/db";
+import { isPlatformAdminEmail } from "@/lib/server/admin";
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
@@ -87,6 +88,7 @@ export async function getCurrentAccount() {
 
   return {
     user: { id: user.id, displayName: user.display_name, email: user.email, phone: user.phone },
+    isPlatformAdmin: isPlatformAdminEmail(user.email),
     stores: storesResult.rows.map((store) => ({
       id: store.id,
       name: store.name,

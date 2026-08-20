@@ -49,6 +49,7 @@ export default function StoreProfilePage() {
   const [memberError, setMemberError] = useState("");
   const [resetMemberId, setResetMemberId] = useState("");
   const [resetPin, setResetPin] = useState("");
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
 
   async function loadMembers(storeId: string) {
     const response = await fetch(`/api/stores/members?storeId=${encodeURIComponent(storeId)}`, { cache: "no-store" });
@@ -61,9 +62,10 @@ export default function StoreProfilePage() {
     setIsNew(new URLSearchParams(window.location.search).get("new") === "1");
     fetch("/api/auth/me", { cache: "no-store" })
       .then((response) => response.json())
-      .then((account: { stores?: StoreProfile[]; error?: string }) => {
+      .then((account: { stores?: StoreProfile[]; isPlatformAdmin?: boolean; error?: string }) => {
         const current = account.stores?.[0];
         if (!current) throw new Error(account.error || "Không tìm thấy cửa hàng.");
+        setIsPlatformAdmin(account.isPlatformAdmin === true);
         setStore(current);
         setName(current.name);
         setPhone(current.phone ?? "");
@@ -159,7 +161,7 @@ export default function StoreProfilePage() {
       <section className={styles.card}>
         <header className={styles.heading}>
           <div><h1>Thông tin cửa hàng</h1><p>Thông tin này sẽ xuất hiện trên hóa đơn in cho khách.</p></div>
-          {!isNew && <Link className={styles.back} href="/">Về bán hàng</Link>}
+          {!isNew && <div className={styles.headingLinks}>{isPlatformAdmin && <Link className={styles.adminLink} href="/admin">Quản trị VERO</Link>}<Link className={styles.back} href="/">Về bán hàng</Link></div>}
         </header>
         <form className={styles.form} onSubmit={handleSubmit}>
           <label className={styles.field}><span>Tên cửa hàng</span><input value={name} onChange={(event) => setName(event.target.value)} maxLength={160} required disabled={!editable} /></label>
