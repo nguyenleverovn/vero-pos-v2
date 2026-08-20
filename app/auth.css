@@ -40,6 +40,8 @@
 .vp-auth-submit { margin-top: 4px; }
 .vp-auth-switch { margin: 18px 0 0; color: var(--vp-muted); text-align: center; font-size: 13px; }
 .vp-auth-switch a { color: var(--vp-action); font-weight: 800; text-decoration: none; }
+.vp-auth-switch--primary { margin-top: 24px; font-size: 18px; }
+.vp-auth-switch--primary a { display: inline-block; padding: 6px 10px; }
 .vp-auth-back { display: block; margin-top: 16px; color: var(--vp-muted); text-align: center; font-size: 12px; text-decoration: none; }
 .vp-welcome-register { margin-top: 14px; color: var(--vp-primary); font-size: 14px; font-weight: 800; text-decoration: none; }
 

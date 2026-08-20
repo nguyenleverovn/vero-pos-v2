@@ -1,12 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import styles from "./GoogleAuthForm.module.css";
 
 type GoogleCredentialResponse = { credential: string };
+
+const GOOGLE_IDENTITY_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 
 declare global {
   interface Window {
@@ -23,7 +25,7 @@ declare global {
               type: "standard";
               theme: "outline";
               size: "large";
-              text: "continue_with";
+              text: "signin_with" | "signup_with";
               shape: "rectangular";
               width: number;
               locale: "vi";
@@ -76,7 +78,7 @@ export function GoogleAuthForm({ mode }: { mode: "login" | "register" }) {
   }, [mode, router]);
 
   const renderGoogleButton = useCallback(() => {
-    if (!clientId || !buttonRef.current || !window.google) return;
+    if (!clientId || !buttonRef.current || !window.google || buttonRef.current.childElementCount > 0) return;
     buttonRef.current.replaceChildren();
     window.google.accounts.id.initialize({
       client_id: clientId,
@@ -87,12 +89,43 @@ export function GoogleAuthForm({ mode }: { mode: "login" | "register" }) {
       type: "standard",
       theme: "outline",
       size: "large",
-      text: "continue_with",
+      text: mode === "register" ? "signup_with" : "signin_with",
       shape: "rectangular",
       width,
       locale: "vi"
     });
-  }, [clientId, submitCredential]);
+  }, [clientId, mode, submitCredential]);
+
+  useEffect(() => {
+    if (!clientId) return;
+
+    if (window.google?.accounts?.id) {
+      renderGoogleButton();
+      return;
+    }
+
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      `script[src="${GOOGLE_IDENTITY_SCRIPT_SRC}"]`
+    );
+    const script = existingScript || document.createElement("script");
+    const handleLoad = () => renderGoogleButton();
+    const handleError = () => setError("Không tải được đăng nhập Google. Vui lòng thử lại.");
+
+    script.addEventListener("load", handleLoad);
+    script.addEventListener("error", handleError);
+
+    if (!existingScript) {
+      script.src = GOOGLE_IDENTITY_SCRIPT_SRC;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      script.removeEventListener("load", handleLoad);
+      script.removeEventListener("error", handleError);
+    };
+  }, [clientId, renderGoogleButton]);
 
   function preventSubmit(event: FormEvent) {
     event.preventDefault();
@@ -101,20 +134,28 @@ export function GoogleAuthForm({ mode }: { mode: "login" | "register" }) {
   const isRegister = mode === "register";
 
   return (
-    <main className="vp-auth-shell">
-      <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onLoad={renderGoogleButton} />
+    <main className="vp-auth">
       <section className="vp-auth-card" aria-labelledby="auth-title">
-        <div className="vp-auth-brand">
-          <span>VERO</span>
-          <strong>POS</strong>
+        <Image
+          className="vp-auth-logo"
+          src="/icons/vero-pos-logo-full.png"
+          alt="VERO POS - Chạm là chạy"
+          width={1238}
+          height={500}
+          priority
+          unoptimized
+        />
+
+        <div className="vp-auth-heading">
+          <h1 id="auth-title">{isRegister ? "Tạo cửa hàng" : "Đăng nhập"}</h1>
+          {isRegister ? <p>Dùng mã mời từ VERO để tạo cửa hàng đầu tiên.</p> : null}
         </div>
-        <h1 id="auth-title">{isRegister ? "Tạo cửa hàng" : "Đăng nhập"}</h1>
 
         <form className="vp-auth-form" onSubmit={preventSubmit}>
           {isRegister ? (
             <>
-              <label>
-                Tên cửa hàng
+              <label className="vp-auth-field">
+                <span>Tên cửa hàng</span>
                 <input
                   autoComplete="organization"
                   maxLength={160}
@@ -124,8 +165,8 @@ export function GoogleAuthForm({ mode }: { mode: "login" | "register" }) {
                   value={storeName}
                 />
               </label>
-              <label>
-                Mã mời
+              <label className="vp-auth-field">
+                <span>Mã mời</span>
                 <input
                   autoCapitalize="characters"
                   autoComplete="off"
@@ -148,12 +189,15 @@ export function GoogleAuthForm({ mode }: { mode: "login" | "register" }) {
           {error ? <p className={styles.error} role="alert">{error}</p> : null}
         </form>
 
-        <p className="vp-auth-switch">
-          {isRegister ? "Đã có cửa hàng?" : "Chưa có cửa hàng?"}{" "}
-          <Link href={isRegister ? "/login" : "/register"}>
-            {isRegister ? "Đăng nhập" : "Đăng ký bằng mã mời"}
-          </Link>
-        </p>
+        {isRegister ? (
+          <p className="vp-auth-switch">
+            Đã có cửa hàng? <Link href="/login">Đăng nhập</Link>
+          </p>
+        ) : (
+          <p className="vp-auth-switch vp-auth-switch--primary">
+            <Link href="/register">Đăng ký cửa hàng</Link>
+          </p>
+        )}
       </section>
     </main>
   );

@@ -1,14 +1,24 @@
 .googleArea {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   justify-items: center;
   min-height: 44px;
+  margin-top: 2px;
   width: 100%;
 }
 
 .googleButton {
+  display: grid;
+  place-items: center;
   min-height: 44px;
+  overflow: hidden;
+  border-radius: 12px;
   width: 100%;
+}
+
+.googleButton > div,
+.googleButton iframe {
+  max-width: 100%;
 }
 
 .note {
