@@ -17,7 +17,7 @@ type StoreProfile = {
 type StoreMember = {
   userId: string;
   displayName: string;
-  email: string | null;
+  phone: string | null;
   role: StoreRole;
   status: "active" | "disabled";
 };
@@ -39,11 +39,15 @@ export default function StoreProfilePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [members, setMembers] = useState<StoreMember[]>([]);
-  const [memberEmail, setMemberEmail] = useState("");
+  const [memberName, setMemberName] = useState("");
+  const [memberPhone, setMemberPhone] = useState("");
+  const [memberPin, setMemberPin] = useState("");
   const [memberRole, setMemberRole] = useState<"manager" | "cashier">("cashier");
   const [memberBusy, setMemberBusy] = useState("");
   const [memberMessage, setMemberMessage] = useState("");
   const [memberError, setMemberError] = useState("");
+  const [resetMemberId, setResetMemberId] = useState("");
+  const [resetPin, setResetPin] = useState("");
 
   async function loadMembers(storeId: string) {
     const response = await fetch(`/api/stores/members?storeId=${encodeURIComponent(storeId)}`, { cache: "no-store" });
@@ -106,14 +110,16 @@ export default function StoreProfilePage() {
       const response = await fetch("/api/stores/members", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId: store.id, email: memberEmail, role: memberRole })
+        body: JSON.stringify({ storeId: store.id, name: memberName, phone: memberPhone, pin: memberPin, role: memberRole })
       });
       const payload = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Chưa thể thêm nhân viên.");
-      setMemberEmail("");
+      setMemberName("");
+      setMemberPhone("");
+      setMemberPin("");
       setMemberRole("cashier");
       await loadMembers(store.id);
-      setMemberMessage("Đã cấp quyền. Nhân viên có thể đăng nhập bằng Gmail này.");
+      setMemberMessage("Đã cấp quyền. Nhân viên có thể đăng nhập bằng số điện thoại và PIN vừa tạo.");
     } catch (caught) {
       setMemberError(caught instanceof Error ? caught.message : "Chưa thể thêm nhân viên.");
     } finally {
@@ -121,7 +127,7 @@ export default function StoreProfilePage() {
     }
   }
 
-  async function updateMember(member: StoreMember, role: "manager" | "cashier", status: "active" | "disabled") {
+  async function updateMember(member: StoreMember, role: "manager" | "cashier", status: "active" | "disabled", pin = "") {
     if (!store || !canManageMembers(store.role)) return;
     setMemberBusy(member.userId);
     setMemberMessage("");
@@ -130,12 +136,14 @@ export default function StoreProfilePage() {
       const response = await fetch("/api/stores/members", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId: store.id, userId: member.userId, role, status })
+        body: JSON.stringify({ storeId: store.id, userId: member.userId, role, status, pin })
       });
       const payload = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Chưa thể cập nhật quyền.");
       await loadMembers(store.id);
-      setMemberMessage(status === "disabled" ? "Đã ngừng quyền truy cập của nhân viên." : "Đã cập nhật quyền nhân viên.");
+      setResetMemberId("");
+      setResetPin("");
+      setMemberMessage(pin ? "Đã đặt PIN mới và đăng xuất các phiên cũ của nhân viên." : status === "disabled" ? "Đã ngừng quyền truy cập của nhân viên." : "Đã cập nhật quyền nhân viên.");
     } catch (caught) {
       setMemberError(caught instanceof Error ? caught.message : "Chưa thể cập nhật quyền.");
     } finally {
@@ -165,25 +173,28 @@ export default function StoreProfilePage() {
       {store && canManageMembers(store.role) && !isNew && (
         <section className={`${styles.card} ${styles.membersCard}`}>
           <header className={styles.heading}>
-            <div><h2>Nhân viên & phân quyền</h2><p>Thêm bằng Gmail. Chỉ chủ cửa hàng được thay đổi quyền.</p></div>
+            <div><h2>Nhân viên & phân quyền</h2><p>Chủ tạo số điện thoại và PIN 6 số cho từng nhân viên.</p></div>
           </header>
           <form className={styles.memberForm} onSubmit={handleAddMember}>
-            <label className={styles.field}><span>Gmail nhân viên</span><input type="email" value={memberEmail} onChange={(event) => setMemberEmail(event.target.value)} placeholder="nhanvien@gmail.com" maxLength={254} required /></label>
+            <label className={styles.field}><span>Tên nhân viên</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="Nguyễn Văn A" maxLength={120} required /></label>
+            <label className={styles.field}><span>Số điện thoại</span><input value={memberPhone} onChange={(event) => setMemberPhone(event.target.value)} inputMode="tel" placeholder="090 123 4567" maxLength={32} required /></label>
+            <label className={styles.field}><span>PIN 6 số</span><input type="password" value={memberPin} onChange={(event) => setMemberPin(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" placeholder="••••••" pattern="[0-9]{6}" required /></label>
             <label className={styles.field}><span>Vai trò</span><select value={memberRole} onChange={(event) => setMemberRole(event.target.value as "manager" | "cashier")}><option value="cashier">Thu ngân</option><option value="manager">Quản lý</option></select></label>
-            <button className={styles.addMember} type="submit" disabled={memberBusy === "new" || !memberEmail.trim()}>{memberBusy === "new" ? "ĐANG THÊM..." : "THÊM NHÂN VIÊN"}</button>
+            <button className={styles.addMember} type="submit" disabled={memberBusy === "new" || !memberName.trim() || !memberPhone.trim() || memberPin.length !== 6}>{memberBusy === "new" ? "ĐANG THÊM..." : "THÊM NHÂN VIÊN"}</button>
           </form>
           {memberMessage && <p className={styles.message} role="status">{memberMessage}</p>}
           {memberError && <p className={styles.error} role="alert">{memberError}</p>}
           <div className={styles.memberList}>
             {members.map((member) => (
               <article className={`${styles.member} ${member.status === "disabled" ? styles.memberDisabled : ""}`} key={member.userId}>
-                <div className={styles.memberIdentity}><strong>{member.displayName}</strong><span>{member.email}</span></div>
+                <div className={styles.memberIdentity}><strong>{member.displayName}</strong><span>{member.phone}</span></div>
                 {member.role === "owner" ? (
                   <span className={styles.ownerBadge}>Chủ cửa hàng</span>
                 ) : (
                   <>
-                    <select aria-label={`Vai trò của ${member.email}`} value={member.role} disabled={memberBusy === member.userId || member.status === "disabled"} onChange={(event) => void updateMember(member, event.target.value as "manager" | "cashier", member.status)}><option value="cashier">Thu ngân</option><option value="manager">Quản lý</option></select>
-                    <button className={member.status === "active" ? styles.disableMember : styles.enableMember} type="button" disabled={memberBusy === member.userId} onClick={() => void updateMember(member, member.role as "manager" | "cashier", member.status === "active" ? "disabled" : "active")}>{memberBusy === member.userId ? "ĐANG LƯU..." : member.status === "active" ? "NGỪNG QUYỀN" : "CẤP LẠI QUYỀN"}</button>
+                    <select aria-label={`Vai trò của ${member.phone}`} value={member.role} disabled={memberBusy === member.userId || member.status === "disabled"} onChange={(event) => void updateMember(member, event.target.value as "manager" | "cashier", member.status)}><option value="cashier">Thu ngân</option><option value="manager">Quản lý</option></select>
+                    <div className={styles.memberActions}><button className={styles.resetMember} type="button" disabled={memberBusy === member.userId || member.status === "disabled"} onClick={() => { setResetMemberId(member.userId); setResetPin(""); }}>ĐẶT LẠI PIN</button><button className={member.status === "active" ? styles.disableMember : styles.enableMember} type="button" disabled={memberBusy === member.userId} onClick={() => void updateMember(member, member.role as "manager" | "cashier", member.status === "active" ? "disabled" : "active")}>{memberBusy === member.userId ? "ĐANG LƯU..." : member.status === "active" ? "NGỪNG QUYỀN" : "CẤP LẠI QUYỀN"}</button></div>
+                    {resetMemberId === member.userId && <div className={styles.resetPanel}><input aria-label="PIN mới" type="password" inputMode="numeric" value={resetPin} onChange={(event) => setResetPin(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="PIN mới 6 số" /><button type="button" disabled={resetPin.length !== 6} onClick={() => void updateMember(member, member.role as "manager" | "cashier", member.status, resetPin)}>LƯU PIN MỚI</button></div>}
                   </>
                 )}
               </article>

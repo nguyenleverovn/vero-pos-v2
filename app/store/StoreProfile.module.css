@@ -58,9 +58,15 @@
 .member select { min-height: 42px; border: 1px solid var(--vp-border); border-radius: 10px; background: white; padding: 0 10px; color: var(--vp-text); font: inherit; font-size: 13px; font-weight: 700; }
 .ownerBadge { align-self: center; justify-self: start; border-radius: 999px; background: #f2ece4; padding: 8px 12px; color: var(--vp-primary); font-size: 12px; font-weight: 800; }
 .disableMember,
-.enableMember { min-height: 42px; border-radius: 10px; padding: 0 12px; font: inherit; font-size: 11px; font-weight: 900; cursor: pointer; }
+.enableMember,
+.resetMember { min-height: 40px; border-radius: 10px; padding: 0 10px; font: inherit; font-size: 10px; font-weight: 900; cursor: pointer; }
 .disableMember { border: 1px solid var(--vp-border); background: white; color: var(--vp-action); }
 .enableMember { border: 0; background: var(--vp-primary); color: white; }
+.resetMember { border: 1px solid var(--vp-border); background: #f4efe9; color: var(--vp-primary); }
+.memberActions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.resetPanel { display: grid; grid-column: 1 / -1; grid-template-columns: 1fr auto; gap: 8px; }
+.resetPanel input { min-height: 42px; min-width: 0; border: 1px solid var(--vp-border); border-radius: 10px; padding: 0 10px; font: inherit; }
+.resetPanel button { border: 0; border-radius: 10px; background: var(--vp-action); color: white; padding: 0 12px; font: inherit; font-size: 10px; font-weight: 900; }
 .disableMember:disabled,
 .enableMember:disabled { opacity: .5; cursor: not-allowed; }
 
@@ -68,8 +74,9 @@
   .screen { padding: 48px 32px; }
   .card { padding: 38px 42px; }
   .form { grid-template-columns: 1fr 1fr; }
-  .memberForm { grid-template-columns: 1fr 180px 180px; align-items: end; }
-  .member { grid-template-columns: minmax(0, 1fr) 150px 140px; align-items: center; }
+  .memberForm { grid-template-columns: 1fr 1fr 130px 150px; align-items: end; }
+  .memberForm .addMember { grid-column: 1 / -1; }
+  .member { grid-template-columns: minmax(0, 1fr) 130px 220px; align-items: center; }
   .fieldAddress,
   .role,
   .message,

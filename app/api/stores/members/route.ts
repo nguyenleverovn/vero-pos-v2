@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPool, withTransaction } from "@/lib/server/db";
-import { cleanText, isSameOrigin, normalizeEmail } from "@/lib/server/request";
+import { cleanText, isSameOrigin, normalizePhone } from "@/lib/server/request";
+import { hashPin } from "@/lib/server/pin";
 import { getCurrentAccount } from "@/lib/server/session";
 
 export const runtime = "nodejs";
@@ -41,11 +42,11 @@ export async function GET(request: Request) {
     const result = await getPool().query<{
       user_id: string;
       display_name: string;
-      email: string | null;
+      phone: string | null;
       role: "owner" | StaffRole;
       status: MemberStatus;
     }>(
-      `SELECT u.id AS user_id, u.display_name, u.email, m.role, m.status
+      `SELECT u.id AS user_id, u.display_name, u.phone, m.role, m.status
          FROM store_memberships m
          JOIN users u ON u.id = m.user_id
         WHERE m.store_id = $1
@@ -57,7 +58,7 @@ export async function GET(request: Request) {
       members: result.rows.map((member) => ({
         userId: member.user_id,
         displayName: member.display_name,
-        email: member.email,
+        phone: member.phone,
         role: member.role,
         status: member.status
       }))
@@ -74,34 +75,33 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null) as Record<string, unknown> | null;
     const storeId = cleanText(body?.storeId, 64);
-    const email = normalizeEmail(body?.email);
+    const name = cleanText(body?.name, 120);
+    const phone = normalizePhone(body?.phone);
+    const pin = typeof body?.pin === "string" ? body.pin.trim() : "";
     const role = cleanText(body?.role, 16);
-    if (!storeId || !/^\S+@\S+\.\S+$/.test(email) || !isStaffRole(role)) {
-      return NextResponse.json({ error: "Vui lòng nhập Gmail và chọn quyền hợp lệ." }, { status: 400 });
+    if (!storeId || !name || phone.length < 9 || !/^\d{6}$/.test(pin) || !isStaffRole(role)) {
+      return NextResponse.json({ error: "Vui lòng nhập tên, số điện thoại, PIN 6 số và quyền hợp lệ." }, { status: 400 });
     }
 
     const authorization = await requireOwner(storeId);
     if (!authorization.ok) return authorization.response;
-    if (authorization.account.user.email?.toLowerCase() === email) {
-      return NextResponse.json({ error: "Anh đang là chủ cửa hàng, không thể tự đổi quyền của mình." }, { status: 400 });
-    }
+    const passwordHash = await hashPin(pin);
 
     const member = await withTransaction(async (client) => {
-      const existingUser = await client.query<{ id: string; display_name: string; status: string }>(
-        "SELECT id, display_name, status FROM users WHERE lower(email) = lower($1) LIMIT 1 FOR UPDATE",
-        [email]
+      const existingUser = await client.query<{ id: string; status: string; email: string | null }>(
+        "SELECT id, status, email FROM users WHERE phone = $1 LIMIT 1 FOR UPDATE",
+        [phone]
       );
       if (existingUser.rows[0]?.status === "disabled") throw new Error("USER_DISABLED");
+      if (existingUser.rows[0]?.email) throw new Error("OWNER_PHONE");
 
       let userId = existingUser.rows[0]?.id;
-      let displayName = existingUser.rows[0]?.display_name;
       if (!userId) {
-        const created = await client.query<{ id: string; display_name: string }>(
-          "INSERT INTO users (display_name, email, password_hash) VALUES ($1, $2, NULL) RETURNING id, display_name",
-          [email.split("@")[0], email]
+        const created = await client.query<{ id: string }>(
+          "INSERT INTO users (display_name, phone, password_hash) VALUES ($1, $2, $3) RETURNING id",
+          [name, phone, passwordHash]
         );
         userId = created.rows[0].id;
-        displayName = created.rows[0].display_name;
       }
 
       const otherStore = await client.query(
@@ -110,6 +110,7 @@ export async function POST(request: Request) {
       );
       if (otherStore.rows[0]) throw new Error("OTHER_STORE");
 
+      await client.query("UPDATE users SET display_name = $1, password_hash = $2, pin_failed_attempts = 0, pin_locked_until = NULL WHERE id = $3", [name, passwordHash, userId]);
       await client.query(
         `INSERT INTO store_memberships (store_id, user_id, role, status)
          VALUES ($1, $2, $3, 'active')
@@ -117,13 +118,16 @@ export async function POST(request: Request) {
          DO UPDATE SET role = EXCLUDED.role, status = 'active'`,
         [storeId, userId, role]
       );
-      return { userId, displayName, email, role, status: "active" as const };
+      return { userId, displayName: name, phone, role, status: "active" as const };
     });
 
     return NextResponse.json(member, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.message === "OTHER_STORE") {
-      return NextResponse.json({ error: "Gmail này đang thuộc một cửa hàng khác trên VERO POS." }, { status: 409 });
+      return NextResponse.json({ error: "Số điện thoại này đang thuộc một cửa hàng khác trên VERO POS." }, { status: 409 });
+    }
+    if (error instanceof Error && error.message === "OWNER_PHONE") {
+      return NextResponse.json({ error: "Số điện thoại này đã thuộc tài khoản chủ cửa hàng." }, { status: 409 });
     }
     if (error instanceof Error && error.message === "USER_DISABLED") {
       return NextResponse.json({ error: "Tài khoản này đang bị khóa." }, { status: 403 });
@@ -142,7 +146,8 @@ export async function PATCH(request: Request) {
     const userId = cleanText(body?.userId, 64);
     const role = cleanText(body?.role, 16);
     const status = cleanText(body?.status, 16);
-    if (!storeId || !userId || !isStaffRole(role) || !isMemberStatus(status)) {
+    const pin = typeof body?.pin === "string" ? body.pin.trim() : "";
+    if (!storeId || !userId || !isStaffRole(role) || !isMemberStatus(status) || (pin && !/^\d{6}$/.test(pin))) {
       return NextResponse.json({ error: "Thông tin phân quyền không hợp lệ." }, { status: 400 });
     }
 
@@ -152,6 +157,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Không thể thay đổi quyền chủ cửa hàng." }, { status: 400 });
     }
 
+    const passwordHash = pin ? await hashPin(pin) : null;
     const updated = await withTransaction(async (client) => {
       const result = await client.query(
         `UPDATE store_memberships
@@ -161,6 +167,10 @@ export async function PATCH(request: Request) {
         [storeId, userId, role, status]
       );
       if (status === "disabled" && result.rows[0]) {
+        await client.query("UPDATE auth_sessions SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL", [userId]);
+      }
+      if (passwordHash && result.rows[0]) {
+        await client.query("UPDATE users SET password_hash = $1, pin_failed_attempts = 0, pin_locked_until = NULL WHERE id = $2", [passwordHash, userId]);
         await client.query("UPDATE auth_sessions SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL", [userId]);
       }
       return result.rows[0];
