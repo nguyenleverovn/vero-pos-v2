@@ -77,7 +77,7 @@ Backend ghi transaction va tra lai cung ket qua neu mutation bi retry.
 
 ```text
 DATABASE_URL
-SESSION_SECRET
+SESSION_COOKIE_NAME
 BACKUP_BUCKET
 BACKUP_ENDPOINT
 BACKUP_ACCESS_KEY_ID

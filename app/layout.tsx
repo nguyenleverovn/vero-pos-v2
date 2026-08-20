@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 import "./responsive.css";
+import "./auth.css";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { BottomNav } from "@/components/BottomNav";
 import { Sidebar } from "@/components/Sidebar";

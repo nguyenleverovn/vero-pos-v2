@@ -15,7 +15,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "reports", href: "/reports", label: "Tổng kết", icon: "/icons/chart.svg?v=2" }
 ];
 
-const ONBOARDING_PATHS = ["/welcome"];
+const ONBOARDING_PATHS = ["/welcome", "/login", "/register"];
 
 export function isOnboardingPath(pathname: string) {
   return ONBOARDING_PATHS.includes(pathname);

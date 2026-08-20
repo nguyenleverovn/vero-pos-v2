@@ -15,6 +15,7 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
   const [allowedPath, setAllowedPath] = useState<string | null>(null);
   const isSetupPath = pathname === "/setup";
   const isWelcomePath = pathname === "/welcome";
+  const isAuthPath = pathname === "/login" || pathname === "/register";
 
   useEffect(() => {
     const handleEnter = () => {
@@ -26,14 +27,14 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (isWelcomePath || isAuthPath) return;
+
     let cancelled = false;
 
     isProductSetupComplete().then((setupCompleted) => {
       if (cancelled) return;
 
-      if (isWelcomePath) {
-        setAllowedPath(pathname);
-      } else if (!entered) {
+      if (!entered) {
         router.replace("/welcome");
       } else if (!setupCompleted && !isSetupPath) {
         router.replace("/welcome");
@@ -43,7 +44,7 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
     });
 
     return () => { cancelled = true; };
-  }, [entered, isSetupPath, isWelcomePath, pathname, router]);
+  }, [entered, isAuthPath, isSetupPath, isWelcomePath, pathname, router]);
 
-  return allowedPath === pathname ? children : null;
+  return isWelcomePath || isAuthPath || allowedPath === pathname ? children : null;
 }
