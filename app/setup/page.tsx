@@ -115,7 +115,7 @@ export default function ProductSetupPage() {
   return (
     <main className="vp-setup">
       <header className="vp-setup-header">
-        <Link className="vp-setup-back" href={completed ? "/menu" : "/welcome"} aria-label="Quay lại">
+        <Link className="vp-setup-back" href={completed ? "/menu" : "/"} aria-label="Quay lại">
           <Image src="/icons/chevron-left.svg" alt="" width={22} height={22} unoptimized />
         </Link>
         <h1>{editingId ? "Chỉnh sửa món" : "Thêm món mới"}</h1>
