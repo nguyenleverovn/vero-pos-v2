@@ -20,9 +20,12 @@ import {
   saveProductSetup
 } from "@/lib/repositories/productSetupRepository";
 import { trackUsageEvent } from "@/lib/analytics/usageAnalytics";
+import { useStoreRole } from "@/lib/client/useStoreRole";
+import { canManageMenu } from "@/lib/permissions";
 
 export default function ProductSetupPage() {
   const router = useRouter();
+  const role = useStoreRole();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [categoryId, setCategoryId] = useState<ProductCategoryId>("coffee");
@@ -39,6 +42,11 @@ export default function ProductSetupPage() {
   const canAddCategory = categoryName.trim().length > 0 && !categories.some((category) => category.label.toLocaleLowerCase("vi") === categoryName.trim().toLocaleLowerCase("vi"));
 
   useEffect(() => {
+    if (role === null) return;
+    if (!canManageMenu(role)) {
+      router.replace("/menu");
+      return;
+    }
     let cancelled = false;
     loadProductSetup().then((setup) => {
       if (cancelled) return;
@@ -58,7 +66,7 @@ export default function ProductSetupPage() {
       }
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [role, router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -111,6 +119,8 @@ export default function ProductSetupPage() {
     setCategoryId(categories[0]?.id ?? "coffee");
     router.replace("/setup");
   }
+
+  if (!canManageMenu(role)) return <main className="vp-setup" />;
 
   return (
     <main className="vp-setup">

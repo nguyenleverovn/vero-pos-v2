@@ -7,18 +7,19 @@ import { PosCatalog } from "@/lib/data/catalog";
 import { loadCatalog } from "@/lib/repositories/catalogRepository";
 import { WorkspaceMeta } from "@/components/WorkspaceMeta";
 import {
-  deleteSetupCategory,
-  deleteSetupProduct,
   updateSetupCategoryOrder,
   updateSetupProductActive
 } from "@/lib/repositories/productSetupRepository";
+import { useStoreRole } from "@/lib/client/useStoreRole";
+import { canManageMenu } from "@/lib/permissions";
 
 export default function MenuPage() {
   const [catalog, setCatalog] = useState<PosCatalog | null>(null);
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
-  const [categoryMessage, setCategoryMessage] = useState("");
+  const role = useStoreRole();
+  const canManage = canManageMenu(role);
   const products = catalog?.products ?? [];
   const visible = products.filter((product) =>
     product.name.toLocaleLowerCase("vi").includes(query.toLocaleLowerCase("vi"))
@@ -32,27 +33,14 @@ export default function MenuPage() {
   }, []);
 
   async function toggleProduct(productId: string) {
+    if (!canManage) return;
     const active = !enabled[productId];
     setEnabled((current) => ({ ...current, [productId]: active }));
     await updateSetupProductActive(productId, active);
   }
 
-  async function removeProduct(productId: string, productName: string) {
-    if (!window.confirm(`Xóa món “${productName}”?`)) return;
-    await deleteSetupProduct(productId);
-    setCatalog((current) => current ? {
-      ...current,
-      products: current.products.filter((product) => product.id !== productId)
-    } : current);
-    setEnabled((current) => {
-      const next = { ...current };
-      delete next[productId];
-      return next;
-    });
-  }
-
   async function moveCategory(index: number, direction: -1 | 1) {
-    if (!catalog) return;
+    if (!catalog || !canManage) return;
     const targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= catalog.categories.length) return;
 
@@ -61,33 +49,6 @@ export default function MenuPage() {
     categories.splice(targetIndex, 0, category);
     setCatalog({ ...catalog, categories });
     await updateSetupCategoryOrder(categories);
-  }
-
-  async function removeCategory(categoryId: string, categoryLabel: string) {
-    if (!catalog) return;
-    const productCount = catalog.products.filter((product) => product.category === categoryId).length;
-    if (productCount > 0) {
-      setCategoryMessage(`Danh mục “${categoryLabel}” còn ${productCount} món. Hãy chuyển hoặc xóa món trước.`);
-      return;
-    }
-    if (catalog.categories.length <= 1) {
-      setCategoryMessage("Menu phải giữ lại ít nhất một danh mục.");
-      return;
-    }
-    if (!window.confirm(`Xóa danh mục “${categoryLabel}”?`)) return;
-
-    const deleted = await deleteSetupCategory(categoryId);
-    if (!deleted) {
-      setCategoryMessage("Không thể xóa danh mục này. Vui lòng kiểm tra lại các món đang sử dụng.");
-      return;
-    }
-
-    setCatalog({
-      ...catalog,
-      categories: catalog.categories.filter((category) => category.id !== categoryId)
-    });
-    if (activeCategory === categoryId) setActiveCategory("all");
-    setCategoryMessage(`Đã xóa danh mục “${categoryLabel}”.`);
   }
 
   return (
@@ -100,7 +61,7 @@ export default function MenuPage() {
         </div>
         <div className="vp-menu-tools">
           <label className="vp-search"><Image src="/icons/search.svg" alt="" width={18} height={18} unoptimized /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm tên món..." aria-label="Tìm món" /></label>
-          <Link className="vp-menu-add" href="/setup">Thêm món mới</Link>
+          {canManage && <Link className="vp-menu-add" href="/setup">Thêm món mới</Link>}
         </div>
       </section>
       {catalog && (
@@ -113,15 +74,13 @@ export default function MenuPage() {
             {catalog.categories.map((category, index) => (
               <div className="vp-menu-category-item" key={category.id}>
                 <span>{category.label}</span>
-                <div>
+                {canManage && <div>
                   <button type="button" onClick={() => moveCategory(index, -1)} disabled={index === 0} aria-label={`Đưa ${category.label} sang trái`}>←</button>
                   <button type="button" onClick={() => moveCategory(index, 1)} disabled={index === catalog.categories.length - 1} aria-label={`Đưa ${category.label} sang phải`}>→</button>
-                  <button className="vp-category-delete" type="button" onClick={() => removeCategory(category.id, category.label)} aria-label={`Xóa danh mục ${category.label}`}>×</button>
-                </div>
+                </div>}
               </div>
             ))}
           </div>
-          {categoryMessage && <p className="vp-menu-category-message" role="status">{categoryMessage}</p>}
         </section>
       )}
       <div className="vp-menu-table-head" aria-hidden="true"><span>Tên món</span><span>Danh mục</span><span>Giá bán</span><span>Trạng thái phục vụ</span><span>Hành động</span></div>
@@ -131,15 +90,14 @@ export default function MenuPage() {
             <strong className="vp-menu-name" data-label="Tên món">{product.name}</strong>
             <span className="vp-menu-category" data-label="Danh mục">{catalog?.categories.find((item) => item.id === product.category)?.label}</span>
             <strong className="vp-menu-price" data-label="Giá bán">{product.priceVnd.toLocaleString("vi-VN")} đ</strong>
-            <div className="vp-menu-service" data-label="Trạng thái phục vụ"><button className={`vp-switch ${enabled[product.id] ? "is-on" : ""}`} type="button" onClick={() => toggleProduct(product.id)} aria-label={`${enabled[product.id] ? "Tắt" : "Bật"} ${product.name}`} /></div>
+            <div className="vp-menu-service" data-label="Trạng thái phục vụ"><button className={`vp-switch ${enabled[product.id] ? "is-on" : ""}`} type="button" onClick={() => toggleProduct(product.id)} disabled={!canManage} aria-label={`${enabled[product.id] ? "Tắt" : "Bật"} ${product.name}`} /></div>
             <div className="vp-menu-actions" data-label="Hành động">
-              <Link className="vp-menu-edit" href={`/setup?edit=${encodeURIComponent(product.id)}`}>Sửa</Link>
-              <button className="vp-menu-delete" type="button" onClick={() => removeProduct(product.id, product.name)}>Xóa</button>
+              {canManage ? <Link className="vp-menu-edit" href={`/setup?edit=${encodeURIComponent(product.id)}`}>Sửa</Link> : <span>Chỉ xem</span>}
             </div>
           </article>
         )) : <div className="vp-menu-empty">Chưa có món phù hợp.</div>}
       </section>
-      <Link className="vp-fab" href="/setup">＋&nbsp; Thêm món mới</Link>
+      {canManage && <Link className="vp-fab" href="/setup">＋&nbsp; Thêm món mới</Link>}
     </main>
   );
 }

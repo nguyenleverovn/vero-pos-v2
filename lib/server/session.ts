@@ -69,11 +69,13 @@ export async function getCurrentAccount() {
   const storesResult = await getPool().query<{
     id: string;
     name: string;
+    phone: string | null;
+    address: string | null;
     timezone: string;
     currency_code: string;
     role: "owner" | "manager" | "cashier";
   }>(
-    `SELECT s.id, s.name, s.timezone, s.currency_code, m.role
+    `SELECT s.id, s.name, s.phone, s.address, s.timezone, s.currency_code, m.role
        FROM store_memberships m
        JOIN stores s ON s.id = m.store_id
       WHERE m.user_id = $1
@@ -88,6 +90,8 @@ export async function getCurrentAccount() {
     stores: storesResult.rows.map((store) => ({
       id: store.id,
       name: store.name,
+      phone: store.phone,
+      address: store.address,
       timezone: store.timezone,
       currencyCode: store.currency_code,
       role: store.role

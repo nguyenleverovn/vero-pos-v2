@@ -1,8 +1,10 @@
 "use client";
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import { createBackup, parseBackup, resetVeroPosData, restoreBackup } from "@/lib/repositories/backupRepository";
+import { createBackup, parseBackup, restoreBackup } from "@/lib/repositories/backupRepository";
 import { getInstallPrompt, setInstallPrompt } from "@/lib/pwa/installPrompt";
+import { useStoreRole } from "@/lib/client/useStoreRole";
+import { canRestoreData } from "@/lib/permissions";
 
 function backupFileName() {
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -16,6 +18,8 @@ export function V1DataTools() {
   const [online, setOnline] = useState(true);
   const [installReady, setInstallReady] = useState(false);
   const [installed, setInstalled] = useState(false);
+  const role = useStoreRole();
+  const canRestore = canRestoreData(role);
 
   useEffect(() => {
     const refresh = () => {
@@ -68,7 +72,7 @@ export function V1DataTools() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!window.confirm("Khôi phục sẽ thay thế toàn bộ dữ liệu hiện tại. Anh chắc chắn tiếp tục?")) return;
+    if (!window.confirm("Khôi phục sẽ thay thế toàn bộ dữ liệu hiện tại. Bạn chắc chắn tiếp tục?")) return;
 
     setBusy(true);
     setMessage("");
@@ -83,26 +87,10 @@ export function V1DataTools() {
     }
   }
 
-  async function handleReset() {
-    if (!window.confirm("Nên xuất file backup trước khi reset. Anh vẫn muốn tiếp tục?")) return;
-    if (!window.confirm("Xóa toàn bộ sản phẩm, danh mục, hóa đơn và thiết lập trên thiết bị này?")) return;
-
-    setBusy(true);
-    setMessage("");
-    try {
-      await resetVeroPosData();
-      setMessage("Đã reset dữ liệu. Đang trở về màn hình chào mừng...");
-      window.setTimeout(() => window.location.assign(new URL("/welcome", window.location.href).href), 700);
-    } catch {
-      setMessage("Không thể reset dữ liệu. Vui lòng thử lại.");
-      setBusy(false);
-    }
-  }
-
   return (
     <section className="vp-v1-tools">
       <div className="vp-v1-tools-heading">
-        <div><span>VERO POS V1</span><h2>Cài đặt &amp; dữ liệu</h2></div>
+        <div><span>VERO POS V2</span><h2>Cài đặt &amp; dữ liệu</h2></div>
         <span className={`vp-online-state ${online ? "is-online" : ""}`}>{online ? "Online" : "Offline"}</span>
       </div>
       <div className="vp-tool-grid">
@@ -116,17 +104,12 @@ export function V1DataTools() {
           <span>Sản phẩm, danh mục, thiết lập và hóa đơn</span>
           <button type="button" onClick={handleBackup} disabled={busy}>Xuất file backup</button>
         </article>
-        <article className="vp-tool-card vp-tool-card--danger">
+        {canRestore && <article className="vp-tool-card vp-tool-card--danger">
           <strong>Khôi phục dữ liệu</strong>
-          <span>Thay toàn bộ dữ liệu bằng một bản backup V1</span>
+          <span>Chỉ chủ cửa hàng được thay dữ liệu bằng một bản backup</span>
           <button type="button" onClick={() => inputRef.current?.click()} disabled={busy}>Chọn file để khôi phục</button>
           <input ref={inputRef} type="file" accept="application/json,.json" onChange={handleRestore} hidden />
-        </article>
-        <article className="vp-tool-card vp-tool-card--reset">
-          <strong>Reset dữ liệu</strong>
-          <span>Xóa toàn bộ dữ liệu thử nghiệm và đưa app về trạng thái ban đầu</span>
-          <button type="button" onClick={handleReset} disabled={busy}>Xóa toàn bộ dữ liệu</button>
-        </article>
+        </article>}
       </div>
       {message && <p className="vp-tool-message" role="status">{message}</p>}
     </section>
