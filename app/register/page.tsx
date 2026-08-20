@@ -1,5 +1,5 @@
-import { GoogleAuthForm } from "@/components/GoogleAuthForm";
+import { redirect } from "next/navigation";
 
 export default function RegisterPage() {
-  return <GoogleAuthForm mode="register" />;
+  redirect("/login");
 }

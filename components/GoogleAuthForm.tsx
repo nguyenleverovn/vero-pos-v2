@@ -1,9 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./GoogleAuthForm.module.css";
 
 type GoogleCredentialResponse = { credential: string };
@@ -37,21 +36,12 @@ declare global {
   }
 }
 
-export function GoogleAuthForm({ mode }: { mode: "login" | "register" }) {
+export function GoogleAuthForm() {
   const router = useRouter();
   const buttonRef = useRef<HTMLDivElement>(null);
-  const storeNameRef = useRef("");
-  const inviteCodeRef = useRef("");
-  const [storeName, setStoreName] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
-
-  useEffect(() => {
-    storeNameRef.current = storeName;
-    inviteCodeRef.current = inviteCode;
-  }, [storeName, inviteCode]);
 
   const submitCredential = useCallback(async (credential: string) => {
     setError("");
@@ -60,22 +50,17 @@ export function GoogleAuthForm({ mode }: { mode: "login" | "register" }) {
       const response = await fetch("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode,
-          credential,
-          storeName: storeNameRef.current,
-          inviteCode: inviteCodeRef.current
-        })
+        body: JSON.stringify({ credential })
       });
-      const payload = await response.json().catch(() => ({})) as { error?: string };
+      const payload = await response.json().catch(() => ({})) as { error?: string; isNewAccount?: boolean };
       if (!response.ok) throw new Error(payload.error || "Chưa thể đăng nhập.");
-      router.push("/setup");
+      router.push(payload.isNewAccount ? "/setup" : "/");
       router.refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Chưa thể đăng nhập.");
       setSubmitting(false);
     }
-  }, [mode, router]);
+  }, [router]);
 
   const renderGoogleButton = useCallback(() => {
     if (!clientId || !buttonRef.current || !window.google || buttonRef.current.childElementCount > 0) return;
@@ -89,12 +74,12 @@ export function GoogleAuthForm({ mode }: { mode: "login" | "register" }) {
       type: "standard",
       theme: "outline",
       size: "large",
-      text: mode === "register" ? "signup_with" : "signin_with",
+      text: "signin_with",
       shape: "rectangular",
       width,
       locale: "vi"
     });
-  }, [clientId, mode, submitCredential]);
+  }, [clientId, submitCredential]);
 
   useEffect(() => {
     if (!clientId) return;
@@ -127,12 +112,6 @@ export function GoogleAuthForm({ mode }: { mode: "login" | "register" }) {
     };
   }, [clientId, renderGoogleButton]);
 
-  function preventSubmit(event: FormEvent) {
-    event.preventDefault();
-  }
-
-  const isRegister = mode === "register";
-
   return (
     <main className="vp-auth">
       <section className="vp-auth-card" aria-labelledby="auth-title">
@@ -147,39 +126,10 @@ export function GoogleAuthForm({ mode }: { mode: "login" | "register" }) {
         />
 
         <div className="vp-auth-heading">
-          <h1 id="auth-title">{isRegister ? "Tạo cửa hàng" : "Đăng nhập"}</h1>
-          {isRegister ? <p>Dùng mã mời từ VERO để tạo cửa hàng đầu tiên.</p> : null}
+          <h1 id="auth-title">Đăng nhập</h1>
         </div>
 
-        <form className="vp-auth-form" onSubmit={preventSubmit}>
-          {isRegister ? (
-            <>
-              <label className="vp-auth-field">
-                <span>Tên cửa hàng</span>
-                <input
-                  autoComplete="organization"
-                  maxLength={160}
-                  onChange={(event) => setStoreName(event.target.value)}
-                  placeholder="Ví dụ: VERO Coffee"
-                  required
-                  value={storeName}
-                />
-              </label>
-              <label className="vp-auth-field">
-                <span>Mã mời</span>
-                <input
-                  autoCapitalize="characters"
-                  autoComplete="off"
-                  maxLength={80}
-                  onChange={(event) => setInviteCode(event.target.value)}
-                  placeholder="Nhập mã VERO cung cấp"
-                  required
-                  value={inviteCode}
-                />
-              </label>
-            </>
-          ) : null}
-
+        <div className="vp-auth-form">
           <div className={styles.googleArea} aria-busy={submitting}>
             {clientId ? <div className={styles.googleButton} ref={buttonRef} /> : (
               <p className={styles.error}>Đăng nhập Google chưa được cấu hình.</p>
@@ -187,17 +137,7 @@ export function GoogleAuthForm({ mode }: { mode: "login" | "register" }) {
             {submitting ? <p className={styles.note}>Đang xác minh...</p> : null}
           </div>
           {error ? <p className={styles.error} role="alert">{error}</p> : null}
-        </form>
-
-        {isRegister ? (
-          <p className="vp-auth-switch">
-            Đã có cửa hàng? <Link href="/login">Đăng nhập</Link>
-          </p>
-        ) : (
-          <p className="vp-auth-switch vp-auth-switch--primary">
-            <Link href="/register">Đăng ký cửa hàng</Link>
-          </p>
-        )}
+        </div>
       </section>
     </main>
   );

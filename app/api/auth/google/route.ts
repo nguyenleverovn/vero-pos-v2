@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { OAuth2Client } from "google-auth-library";
 import { NextResponse } from "next/server";
 import { withTransaction } from "@/lib/server/db";
@@ -13,10 +12,6 @@ class AuthError extends Error {
   }
 }
 
-function hashInviteCode(code: string) {
-  return createHash("sha256").update(code.trim().toUpperCase()).digest("hex");
-}
-
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return NextResponse.json({ error: "Yêu cầu không hợp lệ." }, { status: 403 });
 
@@ -24,9 +19,8 @@ export async function POST(request: Request) {
   if (!clientId) return NextResponse.json({ error: "Đăng nhập Google chưa được cấu hình." }, { status: 503 });
 
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
-  const mode = body?.mode === "register" ? "register" : body?.mode === "login" ? "login" : null;
   const credential = typeof body?.credential === "string" ? body.credential : "";
-  if (!mode || !credential) return NextResponse.json({ error: "Dữ liệu đăng nhập không hợp lệ." }, { status: 400 });
+  if (!credential) return NextResponse.json({ error: "Dữ liệu đăng nhập không hợp lệ." }, { status: 400 });
 
   try {
     const ticket = await new OAuth2Client().verifyIdToken({ idToken: credential, audience: clientId });
@@ -54,52 +48,68 @@ export async function POST(request: Request) {
 
     if (existing) {
       await setSessionCookie(existing.token);
-      return NextResponse.json({ userId: existing.userId });
+      return NextResponse.json({ userId: existing.userId, isNewAccount: false });
     }
 
-    if (mode === "login") throw new AuthError("Tài khoản này chưa được đăng ký.", 404);
-
-    const storeName = cleanText(body?.storeName, 160);
-    const inviteCode = typeof body?.inviteCode === "string" ? body.inviteCode.trim() : "";
-    if (!storeName || !inviteCode) throw new AuthError("Vui lòng nhập tên cửa hàng và mã mời.", 400);
+    const defaultStoreName = cleanText(`Cửa hàng của ${googleDisplayName}`, 160) || "Cửa hàng mới";
 
     const result = await withTransaction(async (client) => {
-      const invite = await client.query<{ id: string }>(
-        `SELECT id
-           FROM invite_codes
-          WHERE code_hash = $1
-            AND disabled_at IS NULL
-            AND (expires_at IS NULL OR expires_at > now())
-            AND used_count < max_uses
-          FOR UPDATE`,
-        [hashInviteCode(inviteCode)]
+      const sameEmail = await client.query<{ id: string; status: string }>(
+        "SELECT id, status FROM users WHERE lower(email) = lower($1) LIMIT 1 FOR UPDATE",
+        [googleEmail]
       );
-      if (!invite.rows[0]) throw new AuthError("Mã mời không hợp lệ hoặc đã được sử dụng.", 403);
+      if (sameEmail.rows[0]?.status === "disabled") throw new AuthError("Tài khoản này đã bị tạm khóa.", 403);
 
-      const sameEmail = await client.query("SELECT id FROM users WHERE lower(email) = lower($1) LIMIT 1", [googleEmail]);
-      if (sameEmail.rows[0]) throw new AuthError("Email này đã được sử dụng bằng phương thức khác.", 409);
+      let userId = sameEmail.rows[0]?.id;
+      if (!userId) {
+        const user = await client.query<{ id: string }>(
+          "INSERT INTO users (display_name, email, password_hash) VALUES ($1, $2, NULL) RETURNING id",
+          [googleDisplayName, googleEmail]
+        );
+        userId = user.rows[0].id;
+      }
 
-      const user = await client.query<{ id: string }>(
-        "INSERT INTO users (display_name, email, password_hash) VALUES ($1, $2, NULL) RETURNING id",
-        [googleDisplayName, googleEmail]
-      );
-      const userId = user.rows[0].id;
       await client.query(
         "INSERT INTO auth_identities (provider, provider_subject, user_id, email) VALUES ('google', $1, $2, $3)",
         [googleSubject, userId, googleEmail]
       );
-      const store = await client.query<{ id: string }>("INSERT INTO stores (name) VALUES ($1) RETURNING id", [storeName]);
-      await client.query(
-        "INSERT INTO store_memberships (store_id, user_id, role) VALUES ($1, $2, 'owner')",
-        [store.rows[0].id, userId]
+
+      const membership = await client.query<{ store_id: string }>(
+        `SELECT m.store_id
+           FROM store_memberships m
+           JOIN stores s ON s.id = m.store_id
+          WHERE m.user_id = $1
+            AND m.status = 'active'
+            AND s.status = 'active'
+          ORDER BY m.created_at
+          LIMIT 1`,
+        [userId]
       );
-      await client.query("UPDATE invite_codes SET used_count = used_count + 1 WHERE id = $1", [invite.rows[0].id]);
+
+      let storeId = membership.rows[0]?.store_id;
+      let isNewAccount = false;
+      if (!storeId) {
+        const store = await client.query<{ id: string }>(
+          "INSERT INTO stores (name) VALUES ($1) RETURNING id",
+          [defaultStoreName]
+        );
+        storeId = store.rows[0].id;
+        await client.query(
+          "INSERT INTO store_memberships (store_id, user_id, role) VALUES ($1, $2, 'owner')",
+          [storeId, userId]
+        );
+        isNewAccount = true;
+      }
+
       const token = await issueSession(client, userId);
-      return { userId, storeId: store.rows[0].id, token };
+      return { userId, storeId, token, isNewAccount };
     });
 
     await setSessionCookie(result.token);
-    return NextResponse.json({ userId: result.userId, storeId: result.storeId }, { status: 201 });
+    return NextResponse.json(
+      { userId: result.userId, storeId: result.storeId, isNewAccount: result.isNewAccount },
+      { status: result.isNewAccount ? 201 : 200 }
+    );
   } catch (error) {
     if (error instanceof AuthError) return NextResponse.json({ error: error.message }, { status: error.status });
     if (isUniqueViolation(error)) return NextResponse.json({ error: "Tài khoản Google đã được sử dụng." }, { status: 409 });
