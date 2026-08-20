@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { isOnboardingPath, NAV_ITEMS } from "@/lib/navigation";
+import { LogoutButton } from "@/components/LogoutButton";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -24,6 +25,7 @@ export function Sidebar() {
           return <Link key={item.key} href={item.href} className={`vp-side-link ${active ? "is-active" : ""}`}><Image src={item.icon} alt="" width={20} height={20} unoptimized /><span>{item.label}</span></Link>;
         })}
       </nav>
+      <LogoutButton className="vp-sidebar-logout" />
     </aside>
   );
 }

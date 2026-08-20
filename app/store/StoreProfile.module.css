@@ -69,6 +69,7 @@
 .resetPanel button { border: 0; border-radius: 10px; background: var(--vp-action); color: white; padding: 0 12px; font: inherit; font-size: 10px; font-weight: 900; }
 .disableMember:disabled,
 .enableMember:disabled { opacity: .5; cursor: not-allowed; }
+.mobileLogout { width: min(100%, 680px); margin: 20px auto 0; }
 
 @media (min-width: 768px) {
   .screen { padding: 48px 32px; }
@@ -82,4 +83,8 @@
   .message,
   .error,
   .submit { grid-column: 1 / -1; }
+}
+
+@media (min-width: 1024px) {
+  .mobileLogout { display: none; }
 }
