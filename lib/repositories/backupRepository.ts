@@ -37,7 +37,7 @@ function validateStoreRecords(storeName: string, records: unknown[]) {
 export function parseBackup(raw: string): VeroPosBackup {
   const backup = JSON.parse(raw) as unknown;
   if (!isRecord(backup) || backup.format !== BACKUP_FORMAT || backup.version !== BACKUP_VERSION || !isRecord(backup.data)) {
-    throw new Error("File không đúng định dạng backup VERO POS V1.");
+    throw new Error("File không đúng định dạng backup VERO POS.");
   }
 
   for (const storeName of STORE_NAMES) {
