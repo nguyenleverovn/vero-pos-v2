@@ -97,13 +97,13 @@
   .vp-app-frame { grid-template-columns: 240px minmax(0, 1fr); }
   .vp-sidebar { padding: 24px 16px; }
   .vp-screen { padding: 24px; }
-  .vp-screen--pos { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: stretch; }
+  .vp-screen--pos { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
   .vp-pos-main { min-width: 0; }
   .vp-product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-content: space-between; min-height: 500px; }
   .vp-product-card { min-height: 140px; }
   .vp-cart-mobile { display: none; }
-  .vp-cart-desktop { position: sticky; top: 24px; display: flex; flex-direction: column; min-height: calc(100dvh - 48px); padding: 20px; border: 1px solid var(--vp-border); border-radius: 16px; background: white; }
-  .vp-cart-desktop .vp-cart-list { flex: 1; max-height: none; overflow-y: auto; }
+  .vp-cart-desktop { position: sticky; top: 24px; align-self: start; display: flex; flex-direction: column; max-height: calc(100dvh - 48px); overflow: hidden; padding: 20px; border: 1px solid var(--vp-border); border-radius: 16px; background: white; }
+  .vp-cart-desktop .vp-cart-list { flex: 0 1 auto; max-height: min(52dvh, 520px); overflow-y: auto; margin-bottom: 16px; }
   .vp-payment-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .85fr); gap: 20px; }
   .vp-payment-summary,
   .vp-checkout-order-summary { min-height: calc(100dvh - 116px); border: 1px solid var(--vp-border); border-radius: 16px; background: white; padding: 20px; }
