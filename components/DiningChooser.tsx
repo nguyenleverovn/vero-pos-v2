@@ -6,42 +6,34 @@ import { DiningConfig, OpenTableOrder } from "@/lib/repositories/diningRepositor
 type Props = {
   config: DiningConfig;
   openOrders: OpenTableOrder[];
+  products: Array<{ id: string; priceVnd: number }>;
   onTakeaway: () => void;
   onTable: (tableId: string) => void;
 };
 
-export function DiningChooser({ config, openOrders, onTakeaway, onTable }: Props) {
-  const [showTables, setShowTables] = useState(false);
+export function DiningChooser({ config, openOrders, products, onTakeaway, onTable }: Props) {
   const activeTables = config.tables.filter((table) => table.active);
   const visibleAreas = config.areas.filter((area) => activeTables.some((table) => table.areaId === area.id));
   const showAreas = visibleAreas.length > 1 || visibleAreas.some((area) => area.name !== "Khu vực chung");
-
-  function revealTables() {
-    setShowTables(true);
-    window.setTimeout(() => document.getElementById("dining-tables")?.scrollIntoView({ behavior: "smooth" }), 0);
-  }
+  const [activeAreaId, setActiveAreaId] = useState(visibleAreas[0]?.id ?? "");
+  const activeArea = visibleAreas.find((area) => area.id === activeAreaId) ?? visibleAreas[0];
+  const priceByProductId = new Map(products.map((product) => [product.id, product.priceVnd]));
 
   return (
     <main className="vp-screen vp-dining-screen">
-      <header className="vp-dining-heading"><div><span>VERO POS</span><h1>Chọn hình thức phục vụ</h1><p>Chạm một lần để bắt đầu đơn.</p></div></header>
-      <section className="vp-service-choice">
-        <button className="is-takeaway" type="button" onClick={onTakeaway}><strong>Mang đi</strong></button>
-        <button className="is-dine-in" type="button" onClick={revealTables}><strong>Ngồi lại</strong></button>
+      <header className="vp-dining-heading"><h1>Sơ đồ bàn</h1></header>
+      <button className="vp-takeaway-button" type="button" onClick={onTakeaway}>BÁN MANG ĐI</button>
+      <section className="vp-dining-tables" id="dining-tables">
+        {showAreas && <div className="vp-area-tabs">{visibleAreas.map((area) => <button className={area.id === activeArea?.id ? "is-active" : ""} type="button" key={area.id} onClick={() => setActiveAreaId(area.id)}>{area.name}</button>)}</div>}
+        <div className="vp-table-grid">
+          {activeTables.filter((table) => table.areaId === activeArea?.id).map((table) => {
+            const order = openOrders.find((item) => item.tableId === table.id);
+            const quantity = order?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+            const total = order?.items.reduce((sum, item) => sum + (priceByProductId.get(item.productId) ?? 0) * item.quantity, 0) ?? 0;
+            return <button className={order ? "is-busy" : ""} type="button" key={table.id} onClick={() => onTable(table.id)}><strong>{table.name}</strong>{order ? <><b>{total.toLocaleString("vi-VN")}đ</b><span>{quantity} món</span></> : <span>Bàn trống</span>}</button>;
+          })}
+        </div>
       </section>
-      {showTables && <section className="vp-dining-tables" id="dining-tables">
-        <div className="vp-dining-section-title"><h2>Chọn bàn</h2>{showAreas && <span>{visibleAreas.length} khu vực</span>}</div>
-        {visibleAreas.map((area) => (
-          <div className="vp-dining-area" key={area.id}>
-            {showAreas && <h3>{area.name}</h3>}
-            <div className="vp-table-grid">
-              {activeTables.filter((table) => table.areaId === area.id).map((table) => {
-                const order = openOrders.find((item) => item.tableId === table.id);
-                return <button className={order ? "is-busy" : ""} type="button" key={table.id} onClick={() => onTable(table.id)}><strong>{table.name}</strong><span>{order ? `${order.items.reduce((sum, item) => sum + item.quantity, 0)} món · ${new Date(order.openedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}` : "Bàn trống"}</span></button>;
-              })}
-            </div>
-          </div>
-        ))}
-      </section>}
     </main>
   );
 }

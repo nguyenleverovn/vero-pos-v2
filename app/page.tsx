@@ -65,7 +65,7 @@ export default function VeroPosPage() {
 
   const activeTables = dining.tables.filter((table) => table.active);
   if (activeTables.length > 0 && !saleContext) {
-    return <DiningChooser config={dining} openOrders={openOrders} onTakeaway={() => { clearCart(); setItems([]); const context = { mode: "takeaway" } as const; saveSaleContext(context); setSaleContext(context); }} onTable={(tableId) => { const context = { mode: "table", tableId } as const; const tableOrder = openOrders.find((order) => order.tableId === tableId); const nextItems = hydrateTableOrder(tableOrder, catalog.products); saveCart(nextItems); setItems(nextItems); saveSaleContext(context); setSaleContext(context); }} />;
+    return <DiningChooser config={dining} openOrders={openOrders} products={catalog.products} onTakeaway={() => { clearCart(); setItems([]); const context = { mode: "takeaway" } as const; saveSaleContext(context); setSaleContext(context); }} onTable={(tableId) => { const context = { mode: "table", tableId } as const; const tableOrder = openOrders.find((order) => order.tableId === tableId); const nextItems = hydrateTableOrder(tableOrder, catalog.products); saveCart(nextItems); setItems(nextItems); saveSaleContext(context); setSaleContext(context); }} />;
   }
 
   const visibleProducts = catalog.products.filter((product) =>
