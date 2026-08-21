@@ -1,4 +1,4 @@
-const CACHE_NAME = "vero-pos-v6";
+const CACHE_NAME = "vero-pos-v7";
 const APP_ROUTES = [
   "/",
   "/welcome",
@@ -130,6 +130,11 @@ async function cachedAssetResponse(request) {
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET" || !request.url.startsWith(self.location.origin)) return;
+  const url = new URL(request.url);
+
+  // Account and store APIs are private, live data. Never cache or serve an
+  // earlier user's response after sign-out or an application update.
+  if (url.pathname.startsWith("/api/")) return;
 
   if (request.mode === "navigate") {
     event.respondWith(navigationResponse(request));
