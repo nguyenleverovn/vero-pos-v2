@@ -18,7 +18,7 @@ export default function CheckoutPage() {
   const [method, setMethod] = useState<PaymentMethod>("cash");
   const [isCompleting, setIsCompleting] = useState(false);
   const [qrCode, setQrCode] = useState("");
-  const [saleContext, setSaleContext] = useState<SaleContext>({ mode: "counter" });
+  const [saleContext, setSaleContext] = useState<SaleContext>({ mode: "takeaway" });
   const [tableName, setTableName] = useState("");
   const due = getCartTotal(items);
   const canComplete = due > 0 && !isCompleting;
@@ -33,7 +33,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     loadPaymentQrCode().then(setQrCode);
     Promise.all([loadDiningConfig(), Promise.resolve(loadSaleContext())]).then(([config, context]: [DiningConfig, SaleContext | null]) => {
-      const current = context ?? { mode: "counter" };
+      const current = context ?? { mode: "takeaway" };
       setSaleContext(current);
       if (current.mode === "table") setTableName(config.tables.find((table) => table.id === current.tableId)?.name ?? "Bàn");
     });

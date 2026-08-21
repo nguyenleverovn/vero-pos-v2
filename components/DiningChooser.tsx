@@ -1,30 +1,34 @@
 "use client";
 
+import { useState } from "react";
 import { DiningConfig, OpenTableOrder } from "@/lib/repositories/diningRepository";
 
 type Props = {
   config: DiningConfig;
   openOrders: OpenTableOrder[];
-  onCounter: () => void;
+  onTakeaway: () => void;
   onTable: (tableId: string) => void;
 };
 
-export function DiningChooser({ config, openOrders, onCounter, onTable }: Props) {
+export function DiningChooser({ config, openOrders, onTakeaway, onTable }: Props) {
+  const [showTables, setShowTables] = useState(false);
   const activeTables = config.tables.filter((table) => table.active);
   const visibleAreas = config.areas.filter((area) => activeTables.some((table) => table.areaId === area.id));
-  const showAreas = visibleAreas.length > 1;
+  const showAreas = visibleAreas.length > 1 || visibleAreas.some((area) => area.name !== "Khu vực chung");
+
+  function revealTables() {
+    setShowTables(true);
+    window.setTimeout(() => document.getElementById("dining-tables")?.scrollIntoView({ behavior: "smooth" }), 0);
+  }
 
   return (
     <main className="vp-screen vp-dining-screen">
       <header className="vp-dining-heading"><div><span>VERO POS</span><h1>Chọn hình thức phục vụ</h1><p>Chạm một lần để bắt đầu đơn.</p></div></header>
       <section className="vp-service-choice">
-        <div className="vp-service-stack">
-          <button type="button" onClick={onCounter}><strong>Mang đi</strong><span>Chọn món và đóng gói</span></button>
-          <button type="button" onClick={onCounter}><strong>Tại quầy</strong><span>Chọn món và thanh toán ngay</span></button>
-        </div>
-        <button type="button" onClick={() => document.getElementById("dining-tables")?.scrollIntoView({ behavior: "smooth" })}><strong>Ngồi lại</strong><span>Chọn bàn và thanh toán sau</span></button>
+        <button className="is-takeaway" type="button" onClick={onTakeaway}><strong>Mang đi</strong></button>
+        <button className="is-dine-in" type="button" onClick={revealTables}><strong>Ngồi lại</strong></button>
       </section>
-      <section className="vp-dining-tables" id="dining-tables">
+      {showTables && <section className="vp-dining-tables" id="dining-tables">
         <div className="vp-dining-section-title"><h2>Chọn bàn</h2>{showAreas && <span>{visibleAreas.length} khu vực</span>}</div>
         {visibleAreas.map((area) => (
           <div className="vp-dining-area" key={area.id}>
@@ -37,7 +41,7 @@ export function DiningChooser({ config, openOrders, onCounter, onTable }: Props)
             </div>
           </div>
         ))}
-      </section>
+      </section>}
     </main>
   );
 }

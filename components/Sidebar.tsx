@@ -1,6 +1,5 @@
 "use client";
 
-import { Fragment } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -23,12 +22,7 @@ export function Sidebar() {
       <nav className="vp-sidebar-nav" aria-label="Điều hướng desktop">
         {NAV_ITEMS.map((item) => {
           const active = pathname === item.href || (pathname === "/checkout" && item.key === "pos") || (pathname === "/setup" && item.key === "menu");
-          return (
-            <Fragment key={item.key}>
-              <Link href={item.href} className={`vp-side-link ${active ? "is-active" : ""}`}><Image src={item.icon} alt="" width={20} height={20} unoptimized /><span>{item.label}</span></Link>
-              {item.key === "store" ? <Link href="/tables" className={`vp-side-link vp-side-link--sub ${pathname === "/tables" ? "is-active" : ""}`}>Cài đặt bàn</Link> : null}
-            </Fragment>
-          );
+          return <Link key={item.key} href={item.href} className={`vp-side-link ${active ? "is-active" : ""}`}><Image src={item.icon} alt="" width={20} height={20} unoptimized /><span>{item.label}</span></Link>;
         })}
       </nav>
       <LogoutButton className="vp-sidebar-logout" />
