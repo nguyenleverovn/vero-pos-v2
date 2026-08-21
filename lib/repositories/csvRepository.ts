@@ -21,7 +21,7 @@ function csvCell(value: string | number) {
 }
 
 function csvLine(values: Array<string | number>) {
-  return values.map(csvCell).join(",");
+  return values.map(csvCell).join(";");
 }
 
 function parseCsv(raw: string) {
@@ -79,6 +79,16 @@ export async function exportMenuCsv() {
     product.priceVnd,
     product.active ? "Đang bán" : "Ngừng bán"
   ])));
+  return UTF8_BOM + lines.join("\r\n");
+}
+
+export function exportMenuTemplateCsv() {
+  const lines = [
+    csvLine(["danh_muc", "ten_mon", "gia_ban", "trang_thai"]),
+    csvLine(["Cà phê", "Cà phê sữa", 30000, "Đang bán"]),
+    csvLine(["Cà phê", "Bạc xỉu", 35000, "Đang bán"]),
+    csvLine(["Trà", "Trà đào", 35000, "Đang bán"])
+  ];
   return UTF8_BOM + lines.join("\r\n");
 }
 

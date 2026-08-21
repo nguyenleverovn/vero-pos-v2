@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { createBackup, parseBackup, restoreBackup } from "@/lib/repositories/backupRepository";
-import { exportMenuCsv, exportOrdersCsv, importMenuCsv } from "@/lib/repositories/csvRepository";
+import { exportMenuCsv, exportMenuTemplateCsv, exportOrdersCsv, importMenuCsv } from "@/lib/repositories/csvRepository";
 import { getInstallPrompt, setInstallPrompt } from "@/lib/pwa/installPrompt";
 import { useStoreRole } from "@/lib/client/useStoreRole";
 import { canManageMenu, canRestoreData } from "@/lib/permissions";
@@ -106,6 +106,11 @@ export function V1DataTools() {
     }
   }
 
+  function handleMenuTemplateDownload() {
+    downloadFile(exportMenuTemplateCsv(), "vero-pos-menu-mau.csv", "text/csv;charset=utf-8");
+    setMessage("Đã tải menu mẫu. Sửa nội dung rồi chọn file này để nhập.");
+  }
+
   async function handleMenuImport(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -170,7 +175,8 @@ export function V1DataTools() {
         </article>
         {canImportMenu && <article className="vp-tool-card">
           <strong>Nhập Menu CSV</strong>
-          <span>Gộp món mới và cập nhật món trùng, không xóa dữ liệu cũ</span>
+          <span>Tải file mẫu, sửa hoặc copy thêm dòng rồi chọn file để nhập</span>
+          <button type="button" onClick={handleMenuTemplateDownload} disabled={busy}>Tải menu mẫu</button>
           <button type="button" onClick={() => menuInputRef.current?.click()} disabled={busy}>Chọn menu.csv</button>
           <input ref={menuInputRef} type="file" accept="text/csv,.csv" onChange={handleMenuImport} hidden />
         </article>}
