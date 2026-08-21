@@ -35,3 +35,10 @@
   .stats { grid-template-columns: repeat(4, 1fr); }
   .store { grid-template-columns: 1.25fr 1fr .8fr 1.25fr auto; align-items: center; }
 }
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .screen { padding: 32px 24px; }
+  .store { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+  .storeMain,
+  .store > div:nth-child(4) { grid-column: 1 / -1; }
+}
