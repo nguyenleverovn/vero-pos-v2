@@ -12,7 +12,7 @@
   border: 1px solid #e3d8d0;
   border-radius: 16px;
   box-shadow: 0 16px 40px rgb(55 38 28 / 10%);
-  font-family: "Courier New", monospace;
+  font-family: Arial, Roboto, "Helvetica Neue", sans-serif;
   font-size: 12px;
   line-height: 1.4;
 }
@@ -139,9 +139,12 @@
     padding: 0;
     color: #000;
     background: #fff;
-    font-family: "Courier New", monospace;
-    font-size: 11px;
-    line-height: 1.35;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    font-family: Arial, Roboto, "Helvetica Neue", sans-serif;
+    font-size: 12px;
+    line-height: 1.3;
   }
 
   .printOnly {
@@ -160,8 +163,8 @@
 
   .header h1 {
     margin: 0;
-    font-size: 22px;
-    letter-spacing: 1px;
+    font-size: 21px;
+    letter-spacing: 0;
   }
 
   .header p {

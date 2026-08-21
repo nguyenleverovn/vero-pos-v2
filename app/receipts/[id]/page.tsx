@@ -64,6 +64,7 @@ export default function ReceiptDetailPage() {
         <header className={styles.header}>
           <h1>{store?.name || "VERO POS"}</h1>
           {store?.phone && <p>Điện thoại: {store.phone}</p>}
+          {store?.address && <p>{store.address}</p>}
         </header>
         <div className={styles.meta}>
           <p><span>Đơn:</span><strong>{formatOrderCode(order.orderNumber)}</strong></p>
@@ -85,8 +86,6 @@ export default function ReceiptDetailPage() {
         <p className={styles.payment}>Thanh toán: {order.paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản"}</p>
         <footer className={styles.footer}>
           <strong>Cảm ơn anh chị và hẹn gặp lại!</strong>
-          {store?.phone && <span>Điện thoại: {store.phone}</span>}
-          {store?.address && <span>{store.address}</span>}
           <small>Powered by Vero Coffee</small>
         </footer>
       </section>
