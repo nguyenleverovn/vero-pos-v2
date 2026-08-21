@@ -61,7 +61,13 @@ export default function StoreProfilePage() {
   useEffect(() => {
     setIsNew(new URLSearchParams(window.location.search).get("new") === "1");
     fetch("/api/auth/me", { cache: "no-store" })
-      .then((response) => response.json())
+      .then(async (response) => {
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) throw new Error("Phiên đăng nhập đã cũ. Vui lòng tải lại trang và đăng nhập lại.");
+        const payload = await response.json() as { stores?: StoreProfile[]; isPlatformAdmin?: boolean; error?: string };
+        if (!response.ok) throw new Error(payload.error || "Chưa thể tải cửa hàng.");
+        return payload;
+      })
       .then((account: { stores?: StoreProfile[]; isPlatformAdmin?: boolean; error?: string }) => {
         const current = account.stores?.[0];
         if (!current) throw new Error(account.error || "Không tìm thấy cửa hàng.");
