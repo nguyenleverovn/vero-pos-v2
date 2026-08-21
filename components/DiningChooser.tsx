@@ -18,7 +18,10 @@ export function DiningChooser({ config, openOrders, onCounter, onTable }: Props)
     <main className="vp-screen vp-dining-screen">
       <header className="vp-dining-heading"><div><span>VERO POS</span><h1>Chọn hình thức phục vụ</h1><p>Chạm một lần để bắt đầu đơn.</p></div></header>
       <section className="vp-service-choice">
-        <button type="button" onClick={onCounter}><strong>Tại quầy / Mang đi</strong><span>Chọn món và thanh toán ngay</span></button>
+        <div className="vp-service-stack">
+          <button type="button" onClick={onCounter}><strong>Mang đi</strong><span>Chọn món và đóng gói</span></button>
+          <button type="button" onClick={onCounter}><strong>Tại quầy</strong><span>Chọn món và thanh toán ngay</span></button>
+        </div>
         <button type="button" onClick={() => document.getElementById("dining-tables")?.scrollIntoView({ behavior: "smooth" })}><strong>Ngồi lại</strong><span>Chọn bàn và thanh toán sau</span></button>
       </section>
       <section className="vp-dining-tables" id="dining-tables">
