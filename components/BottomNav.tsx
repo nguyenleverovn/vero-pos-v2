@@ -12,7 +12,7 @@ export function BottomNav() {
   return (
     <nav className="vp-bottom-nav" aria-label="Điều hướng chính">
       {NAV_ITEMS.map((item) => {
-        const active = pathname === item.href || (pathname === "/checkout" && item.key === "pos") || (pathname === "/setup" && item.key === "menu");
+        const active = pathname === item.href || (pathname === "/checkout" && item.key === "pos") || (pathname === "/setup" && item.key === "menu") || (pathname === "/tables" && item.key === "store");
         return (
           <Link key={item.key} href={item.href} className={`vp-bottom-item ${active ? "is-active" : ""}`}>
             <span className="vp-bottom-icon"><Image src={item.icon} alt="" width={20} height={20} unoptimized /></span>

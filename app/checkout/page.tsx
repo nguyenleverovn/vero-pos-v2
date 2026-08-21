@@ -10,6 +10,7 @@ import { PaymentMethod, saveOrder } from "@/lib/repositories/orderRepository";
 import { loadPaymentQrCode } from "@/lib/repositories/qrCodeRepository";
 import { WorkspaceMeta } from "@/components/WorkspaceMeta";
 import { trackUsageEvent } from "@/lib/analytics/usageAnalytics";
+import { clearSaleContext, closeOpenTableOrder, DiningConfig, loadDiningConfig, loadSaleContext, SaleContext } from "@/lib/repositories/diningRepository";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -17,6 +18,8 @@ export default function CheckoutPage() {
   const [method, setMethod] = useState<PaymentMethod>("cash");
   const [isCompleting, setIsCompleting] = useState(false);
   const [qrCode, setQrCode] = useState("");
+  const [saleContext, setSaleContext] = useState<SaleContext>({ mode: "counter" });
+  const [tableName, setTableName] = useState("");
   const due = getCartTotal(items);
   const canComplete = due > 0 && !isCompleting;
 
@@ -29,6 +32,11 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     loadPaymentQrCode().then(setQrCode);
+    Promise.all([loadDiningConfig(), Promise.resolve(loadSaleContext())]).then(([config, context]: [DiningConfig, SaleContext | null]) => {
+      const current = context ?? { mode: "counter" };
+      setSaleContext(current);
+      if (current.mode === "table") setTableName(config.tables.find((table) => table.id === current.tableId)?.name ?? "Bàn");
+    });
   }, []);
 
   const completeCheckout = async () => {
@@ -36,9 +44,11 @@ export default function CheckoutPage() {
     setIsCompleting(true);
 
     try {
-      await saveOrder(items, method);
+      await saveOrder(items, method, { mode: saleContext.mode, tableName: tableName || undefined });
+      if (saleContext.mode === "table") await closeOpenTableOrder(saleContext.tableId);
       void trackUsageEvent("order_completed");
       clearCart();
+      clearSaleContext();
       router.replace("/");
     } finally {
       setIsCompleting(false);
@@ -49,7 +59,7 @@ export default function CheckoutPage() {
     <main className="vp-screen vp-screen--action">
       <header className="vp-screen-heading vp-screen-heading--back">
         <Link className="vp-back" href="/"><Image src="/icons/chevron-left.svg" alt="Quay lại" width={24} height={24} unoptimized /></Link>
-        <h1>Thanh toán hóa đơn</h1>
+        <h1>{tableName ? `Thanh toán ${tableName}` : "Thanh toán hóa đơn"}</h1>
         <WorkspaceMeta />
       </header>
       <div className="vp-payment-layout">

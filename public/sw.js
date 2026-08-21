@@ -1,4 +1,4 @@
-const CACHE_NAME = "vero-pos-v7";
+const CACHE_NAME = "vero-pos-v8";
 const APP_ROUTES = [
   "/",
   "/welcome",
@@ -8,6 +8,7 @@ const APP_ROUTES = [
   "/receipts",
   "/receipts/offline",
   "/reports"
+  ,"/tables"
 ];
 const STATIC_ASSETS = [
   "/manifest.json",

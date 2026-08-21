@@ -22,6 +22,8 @@ export type PosOrder = {
   paymentMethod: PaymentMethod;
   items: OrderLine[];
   totalVnd: number;
+  serviceMode?: "counter" | "table";
+  tableName?: string;
 };
 
 type StoredPosOrder = Omit<PosOrder, "orderNumber"> & { orderNumber?: number };
@@ -37,7 +39,7 @@ function createOrderId() {
   return `order-${Date.now()}`;
 }
 
-export async function saveOrder(items: CartItem[], paymentMethod: PaymentMethod): Promise<PosOrder> {
+export async function saveOrder(items: CartItem[], paymentMethod: PaymentMethod, service?: { mode: "counter" | "table"; tableName?: string }): Promise<PosOrder> {
   const database = await openVeroPosDatabase();
   const transaction = database.transaction(STORES.orders, "readwrite");
   const store = transaction.objectStore(STORES.orders);
@@ -57,7 +59,9 @@ export async function saveOrder(items: CartItem[], paymentMethod: PaymentMethod)
       priceVnd: item.product.priceVnd,
       quantity: item.quantity
     })),
-    totalVnd: getCartTotal(items)
+    totalVnd: getCartTotal(items),
+    serviceMode: service?.mode ?? "counter",
+    tableName: service?.tableName
   };
 
   await requestToPromise(store.put(order));

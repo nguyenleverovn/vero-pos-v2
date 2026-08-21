@@ -167,7 +167,7 @@ export default function StoreProfilePage() {
       <section className={styles.card}>
         <header className={styles.heading}>
           <div><h1>Thông tin cửa hàng</h1><p>Thông tin này sẽ xuất hiện trên hóa đơn in cho khách.</p></div>
-          {!isNew && <div className={styles.headingLinks}>{isPlatformAdmin && <Link className={styles.adminLink} href="/admin">Quản trị VERO</Link>}<Link className={styles.back} href="/">Về bán hàng</Link></div>}
+          {!isNew && <div className={styles.headingLinks}>{isPlatformAdmin && <Link className={styles.adminLink} href="/admin">Quản trị VERO</Link>}{editable && <Link className={styles.adminLink} href="/tables">Khu vực & bàn</Link>}<Link className={styles.back} href="/">Về bán hàng</Link></div>}
         </header>
         <form className={styles.form} onSubmit={handleSubmit}>
           <label className={styles.field}><span>Tên cửa hàng</span><input value={name} onChange={(event) => setName(event.target.value)} maxLength={160} required disabled={!editable} /></label>
