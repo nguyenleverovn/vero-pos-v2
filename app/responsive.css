@@ -38,6 +38,8 @@
   .vp-sidebar-nav { display: grid; gap: 4px; }
   .vp-side-link { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 16px; border-radius: 8px; color: var(--vp-muted); text-decoration: none; font-size: 14px; font-weight: 700; }
   .vp-side-link img { width: 20px; height: 20px; }
+  .vp-side-link--sub { position: relative; min-height: 34px; margin: -2px 0 4px 48px; padding: 0 12px; font-size: 12px; font-weight: 600; }
+  .vp-side-link--sub::before { content: ""; position: absolute; left: -9px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: .45; }
   .vp-side-link.is-active { background: var(--vp-primary); color: white; }
   .vp-side-link.is-active img { filter: brightness(0) invert(1); }
   .vp-bottom-nav { display: none; }
