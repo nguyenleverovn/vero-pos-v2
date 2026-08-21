@@ -169,3 +169,49 @@
   .vp-setup-actions .vp-save-product:only-child { grid-column: 1 / -1; }
   .vp-save-product { min-height: 61px; }
 }
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .vp-screen { padding: 20px; }
+  .vp-screen-heading,
+  .vp-brand-header { gap: 14px; }
+  .vp-product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .vp-menu-tools { flex-wrap: wrap; }
+  .vp-report-date-panel { grid-template-columns: 1fr 1fr; }
+  .vp-report-date-apply,
+  .vp-report-date-clear { grid-column: auto; }
+  .vp-tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .vp-app-frame { grid-template-columns: 184px minmax(0, 1fr); }
+  .vp-sidebar { padding: 20px 12px; }
+  .vp-screen { padding: 20px; }
+  .vp-screen--pos { grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; }
+  .vp-product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .vp-product-card { min-height: 126px; padding: 16px; }
+  .vp-cart-desktop { top: 20px; max-height: calc(100dvh - 40px); padding: 16px; }
+  .vp-cart-desktop > .vp-cart-row:first-child { align-items: flex-start; gap: 10px; }
+  .vp-cart-desktop > .vp-cart-row:first-child > .vp-button { flex: 0 0 auto; min-height: 38px; padding: 7px 10px; font-size: 12px; white-space: nowrap; }
+  .vp-cart-order-heading h2 { font-size: 16px; }
+  .vp-payment-layout { grid-template-columns: minmax(0, 1fr) minmax(260px, .78fr); gap: 16px; }
+  .vp-payment-summary,
+  .vp-checkout-order-summary { padding: 18px; }
+  .vp-menu-toolbar { display: grid; align-items: stretch; }
+  .vp-menu-tools { width: 100%; }
+  .vp-menu-tools .vp-search { width: auto; min-width: 0; }
+  .vp-menu-table-head,
+  .vp-menu-item { grid-template-columns: 1.35fr .9fr .75fr 1fr 90px; gap: 8px; }
+  .vp-receipt-table-head,
+  .vp-receipt-card { grid-template-columns: .7fr .9fr .9fr 1.05fr .9fr 62px; gap: 8px; }
+  .vp-report-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vp-report-grid { grid-template-columns: 1.15fr 1fr; gap: 16px; }
+  .vp-tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vp-chart-card,
+  .vp-ranking { min-height: 340px; }
+  .vp-setup { max-width: 760px; }
+  .vp-setup-actions { left: auto; width: 100%; }
+}
+
+@media (min-width: 1280px) {
+  .vp-screen--pos { grid-template-columns: minmax(0, 1fr) 340px; }
+}
