@@ -9,6 +9,9 @@
 .areas { display: grid; gap: 14px; }
 .areas > section { border: 1px solid var(--vp-border); border-radius: 16px; padding: 14px; }
 .areas > section > input { width: 100%; font-weight: 900; }
+.areaTableBuilder { display: grid; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--vp-border); }
+.areaTableBuilder label { min-width: 0; display: grid; gap: 6px; }
+.areaTableBuilder span { font-size: 11px; font-weight: 800; }
 .areas > section > div { display: grid; gap: 8px; margin-top: 10px; }
 .areas article { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
 .areas article input { min-width: 0; }
@@ -17,4 +20,4 @@
 .save { width: 100%; min-height: 54px; margin-top: 18px; border: 0; border-radius: 12px; background: var(--vp-action); color: #fff; font-weight: 900; }
 .message, .notice, .empty { margin: 16px 0 0; border-radius: 12px; background: #f2ece4; padding: 13px; color: var(--vp-muted); font-size: 12px; }
 .message { color: var(--vp-primary); font-weight: 800; }
-@media (min-width: 700px) { .builders { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); } .builders form:last-child { grid-template-columns: minmax(0, 1fr) 150px; align-items: end; } .builders form:last-child label:only-of-type, .builders form:last-child button { grid-column: 1 / -1; } .card { padding: 38px 42px; } }
+@media (min-width: 700px) { .areaTableBuilder { grid-template-columns: minmax(0, 1fr) 150px; align-items: end; } .card { padding: 38px 42px; } }
