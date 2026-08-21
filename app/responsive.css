@@ -38,6 +38,8 @@
   .vp-sidebar-nav { display: grid; gap: 4px; }
   .vp-side-link { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 16px; border-radius: 8px; color: var(--vp-muted); text-decoration: none; font-size: 14px; font-weight: 700; }
   .vp-side-link img { width: 20px; height: 20px; }
+  .vp-side-link--sub { position: relative; min-height: 34px; margin: -2px 0 4px 48px; padding: 0 12px; font-size: 12px; font-weight: 600; }
+  .vp-side-link--sub::before { content: ""; position: absolute; left: -9px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: .45; }
   .vp-side-link.is-active { background: var(--vp-primary); color: white; }
   .vp-side-link.is-active img { filter: brightness(0) invert(1); }
   .vp-bottom-nav { display: none; }
@@ -95,13 +97,13 @@
   .vp-app-frame { grid-template-columns: 240px minmax(0, 1fr); }
   .vp-sidebar { padding: 24px 16px; }
   .vp-screen { padding: 24px; }
-  .vp-screen--pos { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: stretch; }
+  .vp-screen--pos { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
   .vp-pos-main { min-width: 0; }
   .vp-product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-content: space-between; min-height: 500px; }
   .vp-product-card { min-height: 140px; }
   .vp-cart-mobile { display: none; }
-  .vp-cart-desktop { position: sticky; top: 24px; display: flex; flex-direction: column; min-height: calc(100dvh - 48px); padding: 20px; border: 1px solid var(--vp-border); border-radius: 16px; background: white; }
-  .vp-cart-desktop .vp-cart-list { flex: 1; max-height: none; overflow-y: auto; }
+  .vp-cart-desktop { position: sticky; top: 24px; align-self: start; display: flex; flex-direction: column; max-height: calc(100dvh - 48px); overflow: hidden; padding: 20px; border: 1px solid var(--vp-border); border-radius: 16px; background: white; }
+  .vp-cart-desktop .vp-cart-list { flex: 0 1 auto; max-height: min(52dvh, 520px); overflow-y: auto; margin-bottom: 16px; }
   .vp-payment-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .85fr); gap: 20px; }
   .vp-payment-summary,
   .vp-checkout-order-summary { min-height: calc(100dvh - 116px); border: 1px solid var(--vp-border); border-radius: 16px; background: white; padding: 20px; }
