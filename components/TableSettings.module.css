@@ -1,4 +1,4 @@
-.card { width: min(100%, 760px); margin: 0 auto; border: 1px solid var(--vp-border); border-radius: 22px; background: #fff; padding: 26px; }
+.card { width: min(100%, 680px); margin: 20px auto 0; border: 1px solid var(--vp-border); border-radius: 22px; background: #fff; padding: 26px; }
 .card h2 { margin: 0; color: var(--vp-primary); font-size: 27px; }
 .builders { display: grid; gap: 12px; margin: 24px 0; }
 .builders form { display: grid; gap: 10px; border-radius: 16px; background: #f7f2ec; padding: 14px; }
@@ -17,4 +17,4 @@
 .save { width: 100%; min-height: 54px; margin-top: 18px; border: 0; border-radius: 12px; background: var(--vp-action); color: #fff; font-weight: 900; }
 .message, .notice, .empty { margin: 16px 0 0; border-radius: 12px; background: #f2ece4; padding: 13px; color: var(--vp-muted); font-size: 12px; }
 .message { color: var(--vp-primary); font-weight: 800; }
-@media (min-width: 700px) { .builders { grid-template-columns: 1fr 1.4fr; } .builders form:last-child { grid-template-columns: 1fr 150px; align-items: end; } .builders form:last-child button { grid-column: 1 / -1; } .card { padding: 36px; } }
+@media (min-width: 700px) { .builders { grid-template-columns: 1fr 1.4fr; } .builders form:last-child { grid-template-columns: 1fr 150px; align-items: end; } .builders form:last-child button { grid-column: 1 / -1; } .card { padding: 38px 42px; } }
