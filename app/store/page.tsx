@@ -35,7 +35,9 @@ export default function StoreProfilePage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [isNew, setIsNew] = useState(false);
+  const [isNew] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("new") === "1"
+  );
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -59,7 +61,6 @@ export default function StoreProfilePage() {
   }
 
   useEffect(() => {
-    setIsNew(new URLSearchParams(window.location.search).get("new") === "1");
     fetch("/api/auth/me", { cache: "no-store" })
       .then(async (response) => {
         const contentType = response.headers.get("content-type") || "";
