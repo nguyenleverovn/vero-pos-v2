@@ -10,7 +10,7 @@ import { PaymentMethod, saveOrder } from "@/lib/repositories/orderRepository";
 import { loadPaymentQrCode } from "@/lib/repositories/qrCodeRepository";
 import { WorkspaceMeta } from "@/components/WorkspaceMeta";
 import { trackUsageEvent } from "@/lib/analytics/usageAnalytics";
-import { clearSaleContext, closeOpenTableOrder, DiningConfig, loadDiningConfig, loadSaleContext, SaleContext } from "@/lib/repositories/diningRepository";
+import { clearSaleContext, closeOpenTableOrder, DiningConfig, loadDiningConfig, loadSaleContext, saveSaleContext, SaleContext } from "@/lib/repositories/diningRepository";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -48,7 +48,11 @@ export default function CheckoutPage() {
       if (saleContext.mode === "table") await closeOpenTableOrder(saleContext.tableId);
       void trackUsageEvent("order_completed");
       clearCart();
-      clearSaleContext();
+      if (saleContext.mode === "table") {
+        clearSaleContext();
+      } else {
+        saveSaleContext({ mode: "takeaway" });
+      }
       router.replace("/");
     } finally {
       setIsCompleting(false);
