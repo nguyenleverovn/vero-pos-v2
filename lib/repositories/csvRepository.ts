@@ -88,7 +88,7 @@ export async function exportOrdersCsv() {
   orders.forEach((order) => lines.push(csvLine([
     order.orderNumber,
     new Date(order.createdAt).toLocaleString("vi-VN"),
-    order.tableName || "Tại quầy / Mang đi",
+    order.tableName || "Mang đi",
     order.paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản",
     order.items.reduce((sum, item) => sum + item.quantity, 0),
     order.totalVnd,

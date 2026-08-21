@@ -15,7 +15,7 @@ export type OpenTableOrder = {
   openedByDisplayName?: string;
   items: Array<{ productId: string; quantity: number }>;
 };
-export type SaleContext = { mode: "counter" } | { mode: "table"; tableId: string };
+export type SaleContext = { mode: "takeaway" } | { mode: "table"; tableId: string };
 
 type ConfigSetting = DiningConfig & { key: typeof DINING_CONFIG_KEY };
 type OpenTablesSetting = { key: typeof OPEN_TABLES_KEY; orders: OpenTableOrder[] };
@@ -91,8 +91,10 @@ export function hydrateTableOrder(order: OpenTableOrder | undefined, products: P
 export function loadSaleContext(): SaleContext | null {
   if (typeof window === "undefined") return null;
   try {
-    const value = JSON.parse(window.sessionStorage.getItem(SALE_CONTEXT_KEY) ?? "null") as SaleContext | null;
-    return value?.mode === "counter" || (value?.mode === "table" && typeof value.tableId === "string") ? value : null;
+    const value = JSON.parse(window.sessionStorage.getItem(SALE_CONTEXT_KEY) ?? "null") as { mode?: string; tableId?: unknown } | null;
+    if (value?.mode === "counter" || value?.mode === "takeaway") return { mode: "takeaway" };
+    if (value?.mode === "table" && typeof value.tableId === "string") return { mode: "table", tableId: value.tableId };
+    return null;
   } catch { return null; }
 }
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { canManageMembers, canManageStore, StoreRole } from "@/lib/permissions";
 import { LogoutButton } from "@/components/LogoutButton";
+import { TableSettings } from "@/components/TableSettings";
 import styles from "./StoreProfile.module.css";
 
 type StoreProfile = {
@@ -168,7 +169,7 @@ export default function StoreProfilePage() {
       <section className={styles.card}>
         <header className={styles.heading}>
           <div><h1>Thông tin cửa hàng</h1><p>Thông tin này sẽ xuất hiện trên hóa đơn in cho khách.</p></div>
-          {!isNew && <div className={styles.headingLinks}>{isPlatformAdmin && <Link className={styles.adminLink} href="/admin">Quản trị VERO</Link>}{editable && <Link className={styles.adminLink} href="/tables">Khu vực & bàn</Link>}<Link className={styles.back} href="/">Về bán hàng</Link></div>}
+          {!isNew && isPlatformAdmin && <div className={styles.headingLinks}><Link className={styles.adminLink} href="/admin">Quản trị VERO</Link></div>}
         </header>
         <form className={styles.form} onSubmit={handleSubmit}>
           <label className={styles.field}><span>Tên cửa hàng</span><input value={name} onChange={(event) => setName(event.target.value)} maxLength={160} required disabled={!editable} /></label>
@@ -180,6 +181,7 @@ export default function StoreProfilePage() {
           {editable && <button className={styles.submit} type="submit" disabled={busy || !name.trim() || !phone.trim() || !address.trim()}>{busy ? "ĐANG LƯU..." : isNew ? "LƯU VÀ THÊM MÓN" : "LƯU THÔNG TIN"}</button>}
         </form>
       </section>
+      {store && !isNew && <TableSettings role={store.role} />}
       {store && canManageMembers(store.role) && !isNew && (
         <section className={`${styles.card} ${styles.membersCard}`}>
           <header className={styles.heading}>

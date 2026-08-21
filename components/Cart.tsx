@@ -54,7 +54,7 @@ export function Cart({ items, onUpdateItem, onRemoveItem, onClearAll, tableName,
       </section>
 
       <aside className="vp-cart-desktop">
-        <div className="vp-cart-row"><div><h2>{tableName || "Đơn tại quầy"}</h2>{onChangeService && <button className="vp-cart-change-service" type="button" onClick={onChangeService}>Đổi hình thức</button>}</div><button className="vp-button vp-button--secondary" type="button" onClick={onClearAll} disabled={!hasItems}>Làm mới</button></div>
+        <div className="vp-cart-row"><div><h2>{tableName || "Mang đi"}</h2>{onChangeService && <button className="vp-cart-change-service" type="button" onClick={onChangeService}>Đổi hình thức</button>}</div><button className="vp-button vp-button--secondary" type="button" onClick={onClearAll} disabled={!hasItems}>Làm mới</button></div>
         {hasItems ? (
           <ul className="vp-cart-list">
             {items.map((item) => <CartLine key={item.product.id} item={item} onChange={onUpdateItem} onRemove={onRemoveItem} />)}
