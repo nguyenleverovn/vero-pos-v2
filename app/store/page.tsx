@@ -35,7 +35,9 @@ export default function StoreProfilePage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [isNew, setIsNew] = useState(false);
+  const [isNew] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("new") === "1"
+  );
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -59,7 +61,6 @@ export default function StoreProfilePage() {
   }
 
   useEffect(() => {
-    setIsNew(new URLSearchParams(window.location.search).get("new") === "1");
     fetch("/api/auth/me", { cache: "no-store" })
       .then(async (response) => {
         const contentType = response.headers.get("content-type") || "";
@@ -167,7 +168,7 @@ export default function StoreProfilePage() {
       <section className={styles.card}>
         <header className={styles.heading}>
           <div><h1>Thông tin cửa hàng</h1><p>Thông tin này sẽ xuất hiện trên hóa đơn in cho khách.</p></div>
-          {!isNew && <div className={styles.headingLinks}>{isPlatformAdmin && <Link className={styles.adminLink} href="/admin">Quản trị VERO</Link>}<Link className={styles.back} href="/">Về bán hàng</Link></div>}
+          {!isNew && <div className={styles.headingLinks}>{isPlatformAdmin && <Link className={styles.adminLink} href="/admin">Quản trị VERO</Link>}{editable && <Link className={styles.adminLink} href="/tables">Khu vực & bàn</Link>}<Link className={styles.back} href="/">Về bán hàng</Link></div>}
         </header>
         <form className={styles.form} onSubmit={handleSubmit}>
           <label className={styles.field}><span>Tên cửa hàng</span><input value={name} onChange={(event) => setName(event.target.value)} maxLength={160} required disabled={!editable} /></label>

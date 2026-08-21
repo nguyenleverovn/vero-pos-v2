@@ -52,6 +52,7 @@ export default function ReceiptDetailPage() {
           </ul>
           <div className="vp-receipt-detail-total"><span>Tổng thanh toán</span><strong>{order.totalVnd.toLocaleString("vi-VN")}đ</strong></div>
           <div className="vp-receipt-detail-method"><span>Phương thức</span><b>{order.paymentMethod === "transfer" ? "Chuyển khoản" : "Tiền mặt"}</b></div>
+          {order.tableName && <div className="vp-receipt-detail-method"><span>Phục vụ</span><b>{order.tableName}</b></div>}
           <div className="vp-receipt-detail-actions">
             <button className="vp-primary-button" type="button" onClick={() => window.print()}>IN HÓA ĐƠN</button>
           </div>
@@ -67,6 +68,7 @@ export default function ReceiptDetailPage() {
         <div className={styles.meta}>
           <p><span>Đơn:</span><strong>{formatOrderCode(order.orderNumber)}</strong></p>
           <p><span>Thời gian:</span><strong>{new Date(order.createdAt).toLocaleString("vi-VN")}</strong></p>
+          {order.tableName && <p><span>Bàn:</span><strong>{order.tableName}</strong></p>}
         </div>
         <div className={styles.items}>
           {order.items.map((item) => (

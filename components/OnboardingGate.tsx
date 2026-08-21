@@ -10,10 +10,7 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
   const isPublicPath = pathname === "/login" || pathname === "/register" || pathname === "/welcome";
 
   useEffect(() => {
-    if (isPublicPath) {
-      setAllowedPath(pathname);
-      return;
-    }
+    if (isPublicPath) return;
 
     let cancelled = false;
     fetch("/api/auth/me", { cache: "no-store" })
@@ -29,5 +26,5 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
     return () => { cancelled = true; };
   }, [isPublicPath, pathname, router]);
 
-  return allowedPath === pathname ? children : null;
+  return isPublicPath || allowedPath === pathname ? children : null;
 }
