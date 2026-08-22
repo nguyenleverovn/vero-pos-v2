@@ -123,7 +123,7 @@
 
 @page {
   size: 80mm auto;
-  margin: 4mm;
+  margin: 0;
 }
 
 @media print {
@@ -135,8 +135,8 @@
     box-sizing: border-box;
     display: block;
     width: 72mm;
-    margin: 0;
-    padding: 0;
+    margin: 0 auto;
+    padding: 0 0 6mm;
     color: #000;
     background: #fff;
     border: 0;
