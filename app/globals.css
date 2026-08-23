@@ -360,6 +360,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .vp-setup-back { width: 26px; height: 36px; display: grid; place-items: center; }
 .vp-setup-back img { width: 22px; height: 22px; }
 .vp-setup-form { display: grid; gap: 18px; padding-top: 0; }
+.vp-setup-field--category { order: 1; }
+.vp-setup-field--name { order: 2; }
+.vp-setup-field--price { order: 3; }
+.vp-setup-status { order: 4; }
+.vp-setup-field--note { order: 5; }
+.vp-setup-saved { order: 6; }
+.vp-setup-actions { order: 7; }
 .vp-image-upload { min-height: 198px; display: grid; place-items: center; align-content: center; gap: 7px; border: 1px dashed #dfcdbf; border-radius: 16px; background: white; color: var(--vp-muted); cursor: pointer; text-align: center; }
 .vp-image-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .vp-image-upload-icon { position: relative; width: 54px; height: 54px; display: grid; place-items: center; border-radius: 50%; background: #f8f3ef; }

@@ -32,7 +32,7 @@
   .vp-app-frame:has(.vp-onboarding) { display: block; }
   .vp-welcome-content { width: min(520px, calc(100vw - 80px)); }
   .vp-content { min-width: 0; }
-  .vp-sidebar { position: sticky; top: 0; align-self: start; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; padding: 20px 12px; border-right: 1px solid var(--vp-border); background: #faf7f2; }
+  .vp-sidebar { position: sticky; top: 0; align-self: start; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; padding: 20px 12px 8px; border-right: 1px solid var(--vp-border); background: #faf7f2; }
   .vp-sidebar-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
   .vp-sidebar-brand img { display: block; width: 36px; height: 32px; object-fit: contain; }
   .vp-sidebar-nav { display: grid; min-height: 0; gap: 4px; overflow-y: auto; }
@@ -82,8 +82,8 @@
   .vp-setup-field--category,
   .vp-setup-field--note,
   .vp-setup-saved { grid-column: 1 / -1; }
-  .vp-setup-field--name { order: 1; }
-  .vp-setup-field--category { order: 2; max-width: none; }
+  .vp-setup-field--category { order: 1; max-width: none; }
+  .vp-setup-field--name { order: 2; }
   .vp-setup-field--price { order: 3; }
   .vp-setup-status { order: 4; min-height: 66px; border-radius: 10px; }
   .vp-setup-field--note { order: 5; }
@@ -94,7 +94,7 @@
 
 @media (min-width: 1024px) {
   .vp-app-frame { grid-template-columns: 240px minmax(0, 1fr); }
-  .vp-sidebar { padding: 24px 16px; }
+  .vp-sidebar { padding: 24px 16px 8px; }
   .vp-screen { padding: 24px; }
   .vp-screen--pos { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
   .vp-pos-main { min-width: 0; }
@@ -185,7 +185,7 @@
 
 @media (min-width: 1024px) and (max-width: 1279px) {
   .vp-app-frame { grid-template-columns: 184px minmax(0, 1fr); }
-  .vp-sidebar { padding: 20px 12px; }
+  .vp-sidebar { padding: 20px 12px 8px; }
   .vp-screen { padding: 20px; }
   .vp-screen--pos { grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; }
   .vp-product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
