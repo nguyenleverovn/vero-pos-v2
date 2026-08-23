@@ -8,6 +8,7 @@ import { loadCatalog } from "@/lib/repositories/catalogRepository";
 import { WorkspaceMeta } from "@/components/WorkspaceMeta";
 import {
   deleteSetupCategory,
+  deleteSetupProduct,
   updateSetupCategoryOrder,
   updateSetupProductActive
 } from "@/lib/repositories/productSetupRepository";
@@ -66,6 +67,19 @@ export default function MenuPage() {
     setCategoryMessage(`Đã xóa danh mục ${label}.`);
   }
 
+  async function removeProduct(productId: string, name: string) {
+    if (!catalog || !canManage) return;
+    if (!window.confirm(`Xóa món ${name} khỏi menu?`)) return;
+
+    await deleteSetupProduct(productId);
+    setCatalog({ ...catalog, products: catalog.products.filter((product) => product.id !== productId) });
+    setEnabled((current) => {
+      const next = { ...current };
+      delete next[productId];
+      return next;
+    });
+  }
+
   return (
     <main className="vp-screen vp-screen--plain">
       <header className="vp-screen-heading"><h1>Quản lý Thực đơn</h1><WorkspaceMeta /></header>
@@ -109,7 +123,7 @@ export default function MenuPage() {
             <strong className="vp-menu-price" data-label="Giá bán">{product.priceVnd.toLocaleString("vi-VN")} đ</strong>
             <div className="vp-menu-service" data-label="Trạng thái phục vụ"><button className={`vp-switch ${enabled[product.id] ? "is-on" : ""}`} type="button" onClick={() => toggleProduct(product.id)} disabled={!canManage} aria-label={`${enabled[product.id] ? "Tắt" : "Bật"} ${product.name}`} /></div>
             <div className="vp-menu-actions" data-label="Hành động">
-              {canManage ? <Link className="vp-menu-edit" href={`/setup?edit=${encodeURIComponent(product.id)}`}>Sửa</Link> : <span>Chỉ xem</span>}
+              {canManage ? <><Link className="vp-menu-edit" href={`/setup?edit=${encodeURIComponent(product.id)}`}>Sửa</Link><button className="vp-menu-delete" type="button" onClick={() => removeProduct(product.id, product.name)}>Xóa</button></> : <span>Chỉ xem</span>}
             </div>
           </article>
         )) : <div className="vp-menu-empty">Chưa có món phù hợp.</div>}
