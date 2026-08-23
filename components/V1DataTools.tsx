@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { createBackup, parseBackup, restoreBackup } from "@/lib/repositories/backupRepository";
-import { exportMenuCsv, exportMenuTemplateCsv, exportOrdersCsv, importMenuCsv } from "@/lib/repositories/csvRepository";
+import { exportMenuCsv, exportOrdersCsv, importMenuCsv } from "@/lib/repositories/csvRepository";
 import { getInstallPrompt, setInstallPrompt } from "@/lib/pwa/installPrompt";
 import { useStoreRole } from "@/lib/client/useStoreRole";
 import { canManageMenu, canRestoreData } from "@/lib/permissions";
@@ -106,20 +106,16 @@ export function V1DataTools() {
     }
   }
 
-  function handleMenuTemplateDownload() {
-    downloadFile(exportMenuTemplateCsv(), "vero-pos-menu-mau.csv", "text/csv;charset=utf-8");
-    setMessage("Đã tải menu mẫu. Sửa nội dung rồi chọn file này để nhập.");
-  }
-
   async function handleMenuImport(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file || !canImportMenu) return;
+    if (!window.confirm("Nhập CSV sẽ thay thế toàn bộ menu hiện tại. Bạn chắc chắn tiếp tục?")) return;
     setBusy(true);
     setMessage("");
     try {
       const result = await importMenuCsv(await file.text());
-      setMessage(`Đã nhập menu: thêm ${result.created} món, cập nhật ${result.updated} món, thêm ${result.categoriesAdded} danh mục.`);
+      setMessage(`Đã thay thế menu bằng ${result.productsImported} món trong ${result.categoriesImported} danh mục. Vào Menu và chọn Sửa để chỉnh từng món.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không thể nhập menu CSV.");
     } finally {
@@ -164,20 +160,15 @@ export function V1DataTools() {
           <button type="button" onClick={handleBackup} disabled={busy}>Xuất file backup</button>
         </article>
         <article className="vp-tool-card">
-          <strong>Xuất Menu CSV</strong>
-          <span>Mở bằng Excel hoặc Google Sheets</span>
-          <button type="button" onClick={handleMenuExport} disabled={busy}>Tải menu.csv</button>
-        </article>
-        <article className="vp-tool-card">
           <strong>Xuất Đơn hàng CSV</strong>
           <span>Dùng để đối soát và làm báo cáo</span>
           <button type="button" onClick={handleOrdersExport} disabled={busy}>Tải đơn hàng.csv</button>
         </article>
         {canImportMenu && <article className="vp-tool-card">
-          <strong>Nhập Menu CSV</strong>
-          <span>Tải file mẫu, sửa hoặc copy thêm dòng rồi chọn file để nhập</span>
-          <button type="button" onClick={handleMenuTemplateDownload} disabled={busy}>Tải menu mẫu</button>
-          <button type="button" onClick={() => menuInputRef.current?.click()} disabled={busy}>Chọn menu.csv</button>
+          <strong>Chỉnh sửa Menu bằng CSV</strong>
+          <span>Tải menu hiện tại, sửa bằng Excel rồi cập nhật lại; file tải lên sẽ thay thế menu cũ</span>
+          <button type="button" onClick={handleMenuExport} disabled={busy}>Tải menu để chỉnh sửa</button>
+          <button type="button" onClick={() => menuInputRef.current?.click()} disabled={busy}>Cập nhật menu từ CSV</button>
           <input ref={menuInputRef} type="file" accept="text/csv,.csv" onChange={handleMenuImport} hidden />
         </article>}
         <article className="vp-tool-card">
