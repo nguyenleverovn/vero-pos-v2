@@ -1,3 +1,4 @@
+import { getCatalog } from "@/lib/data/catalog";
 import { loadProductSetup, saveProductSetup } from "@/lib/repositories/productSetupRepository";
 import { loadOrders } from "@/lib/repositories/orderRepository";
 
@@ -71,6 +72,19 @@ function importedId(prefix: string) {
 
 export async function exportMenuCsv() {
   const setup = await loadProductSetup();
+  if (setup.products.length === 0) {
+    const catalog = getCatalog();
+    const categoryLabels = new Map(catalog.categories.map((category) => [category.id, category.label]));
+    const lines = [csvLine(["danh_muc", "ten_mon", "gia_ban", "trang_thai"])];
+    catalog.products.forEach((product) => lines.push(csvLine([
+      categoryLabels.get(product.category) ?? "Khác",
+      product.name,
+      product.priceVnd,
+      product.active ? "Đang bán" : "Ngừng bán"
+    ])));
+    return UTF8_BOM + lines.join("\r\n");
+  }
+
   const categoryLabels = new Map(setup.categories.map((category) => [category.id, category.label]));
   const lines = [csvLine(["danh_muc", "ten_mon", "gia_ban", "trang_thai"])];
   setup.products.forEach((product) => lines.push(csvLine([
@@ -79,16 +93,6 @@ export async function exportMenuCsv() {
     product.priceVnd,
     product.active ? "Đang bán" : "Ngừng bán"
   ])));
-  return UTF8_BOM + lines.join("\r\n");
-}
-
-export function exportMenuTemplateCsv() {
-  const lines = [
-    csvLine(["danh_muc", "ten_mon", "gia_ban", "trang_thai"]),
-    csvLine(["Cà phê", "Cà phê sữa", 30000, "Đang bán"]),
-    csvLine(["Cà phê", "Bạc xỉu", 35000, "Đang bán"]),
-    csvLine(["Trà", "Trà đào", 35000, "Đang bán"])
-  ];
   return UTF8_BOM + lines.join("\r\n");
 }
 
@@ -132,28 +136,22 @@ export async function importMenuCsv(raw: string) {
     return { category, name, priceVnd, active };
   });
 
-  const setup = await loadProductSetup();
-  const categories = [...setup.categories];
+  const categories: Array<{ id: string; label: string }> = [];
   const categoryByName = new Map(categories.map((category) => [normalized(category.label), category]));
-  let categoriesAdded = 0;
   parsed.forEach((item) => {
     const key = normalized(item.category);
     if (!categoryByName.has(key)) {
       const category = { id: importedId("category"), label: item.category };
       categories.push(category);
       categoryByName.set(key, category);
-      categoriesAdded += 1;
     }
   });
 
-  const products = [...setup.products];
+  const products: Array<{ id: string; name: string; priceVnd: number; categoryId: string; active: boolean }> = [];
   const productIndex = new Map(products.map((product, index) => [
     `${normalized(categoryByName.get(normalized(categories.find((category) => category.id === product.categoryId)?.label ?? ""))?.label ?? "")}|${normalized(product.name)}`,
     index
   ]));
-  let created = 0;
-  let updated = 0;
-
   parsed.forEach((item) => {
     const category = categoryByName.get(normalized(item.category))!;
     const key = `${normalized(category.label)}|${normalized(item.name)}`;
@@ -161,13 +159,14 @@ export async function importMenuCsv(raw: string) {
     if (existingIndex === undefined) {
       productIndex.set(key, products.length);
       products.push({ id: importedId("product"), name: item.name, priceVnd: item.priceVnd, categoryId: category.id, active: item.active });
-      created += 1;
     } else {
       products[existingIndex] = { ...products[existingIndex], name: item.name, priceVnd: item.priceVnd, categoryId: category.id, active: item.active };
-      updated += 1;
     }
   });
 
   await saveProductSetup({ categories, products, completed: true });
-  return { created, updated, categoriesAdded };
+  return {
+    productsImported: products.length,
+    categoriesImported: categories.length
+  };
 }
