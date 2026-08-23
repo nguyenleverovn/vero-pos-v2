@@ -32,7 +32,7 @@
   .vp-app-frame:has(.vp-onboarding) { display: block; }
   .vp-welcome-content { width: min(520px, calc(100vw - 80px)); }
   .vp-content { min-width: 0; }
-  .vp-sidebar { position: sticky; top: 0; align-self: start; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; padding: 20px 12px 8px; border-right: 1px solid var(--vp-border); background: #faf7f2; }
+  .vp-sidebar { position: sticky; top: 0; align-self: start; height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; padding: 20px 12px 8px; border-right: 1px solid var(--vp-border); background: #faf7f2; }
   .vp-sidebar-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
   .vp-sidebar-brand img { display: block; width: 36px; height: 32px; object-fit: contain; }
   .vp-sidebar-nav { display: grid; min-height: 0; gap: 4px; overflow-y: auto; }

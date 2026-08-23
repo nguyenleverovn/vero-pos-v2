@@ -4,6 +4,7 @@ import {
   ProductSetupState,
   SetupProduct
 } from "@/lib/onboarding/productSetup";
+import { getCatalog } from "@/lib/data/catalog";
 import {
   openVeroPosDatabase,
   requestToPromise,
@@ -125,8 +126,27 @@ export async function isProductSetupComplete(): Promise<boolean> {
   return (await loadProductSetup()).completed;
 }
 
-export async function updateSetupProductActive(productId: string, active: boolean): Promise<void> {
+async function loadMutableProductSetup(): Promise<ProductSetupState> {
   const state = await loadProductSetup();
+  if (state.completed || state.products.length > 0) return state;
+
+  const catalog = getCatalog();
+  return {
+    categories: catalog.categories.map((category) => ({ ...category })),
+    products: catalog.products.map((product) => ({
+      id: product.id,
+      name: product.name,
+      priceVnd: product.priceVnd,
+      categoryId: product.category,
+      note: product.note,
+      active: product.active
+    })),
+    completed: true
+  };
+}
+
+export async function updateSetupProductActive(productId: string, active: boolean): Promise<void> {
+  const state = await loadMutableProductSetup();
   await saveProductSetup({
     ...state,
     products: state.products.map((product) => product.id === productId ? { ...product, active } : product)
@@ -134,12 +154,12 @@ export async function updateSetupProductActive(productId: string, active: boolea
 }
 
 export async function updateSetupCategoryOrder(categories: ProductCategory[]): Promise<void> {
-  const state = await loadProductSetup();
+  const state = await loadMutableProductSetup();
   await saveProductSetup({ ...state, categories });
 }
 
 export async function deleteSetupProduct(productId: string): Promise<void> {
-  const state = await loadProductSetup();
+  const state = await loadMutableProductSetup();
   await saveProductSetup({
     ...state,
     products: state.products.filter((product) => product.id !== productId)
@@ -147,7 +167,7 @@ export async function deleteSetupProduct(productId: string): Promise<void> {
 }
 
 export async function deleteSetupCategory(categoryId: ProductCategory["id"]): Promise<boolean> {
-  const state = await loadProductSetup();
+  const state = await loadMutableProductSetup();
   const hasProducts = state.products.some((product) => product.categoryId === categoryId);
   if (hasProducts || state.categories.length <= 1) return false;
 
