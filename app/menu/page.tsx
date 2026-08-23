@@ -7,6 +7,7 @@ import { PosCatalog } from "@/lib/data/catalog";
 import { loadCatalog } from "@/lib/repositories/catalogRepository";
 import { WorkspaceMeta } from "@/components/WorkspaceMeta";
 import {
+  deleteSetupCategory,
   updateSetupCategoryOrder,
   updateSetupProductActive
 } from "@/lib/repositories/productSetupRepository";
@@ -18,6 +19,7 @@ export default function MenuPage() {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
+  const [categoryMessage, setCategoryMessage] = useState("");
   const role = useStoreRole();
   const canManage = canManageMenu(role);
   const products = catalog?.products ?? [];
@@ -51,6 +53,19 @@ export default function MenuPage() {
     await updateSetupCategoryOrder(categories);
   }
 
+  async function removeCategory(categoryId: string, label: string) {
+    if (!catalog || !canManage) return;
+    const deleted = await deleteSetupCategory(categoryId);
+    if (!deleted) {
+      setCategoryMessage(`Không thể xóa ${label}. Hãy chuyển hoặc xóa hết món trong danh mục trước.`);
+      return;
+    }
+
+    setCatalog({ ...catalog, categories: catalog.categories.filter((category) => category.id !== categoryId) });
+    if (activeCategory === categoryId) setActiveCategory("all");
+    setCategoryMessage(`Đã xóa danh mục ${label}.`);
+  }
+
   return (
     <main className="vp-screen vp-screen--plain">
       <header className="vp-screen-heading"><h1>Quản lý Thực đơn</h1><WorkspaceMeta /></header>
@@ -77,10 +92,12 @@ export default function MenuPage() {
                 {canManage && <div>
                   <button type="button" onClick={() => moveCategory(index, -1)} disabled={index === 0} aria-label={`Đưa ${category.label} sang trái`}>←</button>
                   <button type="button" onClick={() => moveCategory(index, 1)} disabled={index === catalog.categories.length - 1} aria-label={`Đưa ${category.label} sang phải`}>→</button>
+                  <button className="vp-category-delete" type="button" onClick={() => removeCategory(category.id, category.label)} aria-label={`Xóa danh mục ${category.label}`}>×</button>
                 </div>}
               </div>
             ))}
           </div>
+          {categoryMessage && <p className="vp-menu-category-message" role="status">{categoryMessage}</p>}
         </section>
       )}
       <div className="vp-menu-table-head" aria-hidden="true"><span>Tên món</span><span>Danh mục</span><span>Giá bán</span><span>Trạng thái phục vụ</span><span>Hành động</span></div>
