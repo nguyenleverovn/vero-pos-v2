@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { canManageMembers, canManageStore, StoreRole } from "@/lib/permissions";
 import { LogoutButton } from "@/components/LogoutButton";
 import { TableSettings } from "@/components/TableSettings";
+import { PromotionSettings } from "@/components/PromotionSettings";
 import styles from "./StoreProfile.module.css";
 
 type StoreProfile = {
@@ -182,6 +183,7 @@ export default function StoreProfilePage() {
         </form>
       </section>
       {store && !isNew && <TableSettings role={store.role} />}
+      {store && !isNew && <PromotionSettings role={store.role} />}
       {store && canManageMembers(store.role) && !isNew && (
         <section className={`${styles.card} ${styles.membersCard}`}>
           <header className={styles.heading}>

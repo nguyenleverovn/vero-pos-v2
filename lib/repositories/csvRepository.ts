@@ -98,13 +98,16 @@ export async function exportMenuCsv() {
 
 export async function exportOrdersCsv() {
   const orders = await loadOrders();
-  const lines = [csvLine(["ma_don", "thoi_gian", "hinh_thuc", "phuong_thuc", "so_luong_mon", "tong_tien", "chi_tiet"])];
+  const lines = [csvLine(["ma_don", "thoi_gian", "hinh_thuc", "phuong_thuc", "so_luong_mon", "tien_hang", "khuyen_mai", "giam_gia", "tong_tien", "chi_tiet"])];
   orders.forEach((order) => lines.push(csvLine([
     order.orderNumber,
     new Date(order.createdAt).toLocaleString("vi-VN"),
     order.tableName || "Mang đi",
     order.paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản",
     order.items.reduce((sum, item) => sum + item.quantity, 0),
+    order.subtotalVnd ?? order.items.reduce((sum, item) => sum + item.priceVnd * item.quantity, 0),
+    order.promotionName ?? "",
+    order.discountVnd ?? 0,
     order.totalVnd,
     order.items.map((item) => `${item.quantity}x ${item.name}`).join(" | ")
   ])));

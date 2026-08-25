@@ -64,6 +64,19 @@
   border-bottom: 1px dashed currentColor;
 }
 
+.breakdown {
+  display: grid;
+  gap: 3px;
+  padding: 9px 0 0;
+}
+
+.breakdown p {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+}
+
 .item p {
   flex: 1;
 }
@@ -200,6 +213,12 @@
     gap: 6px;
     padding: 10px 0;
     border-bottom: 1px dashed #000;
+  }
+
+  .breakdown {
+    display: grid;
+    gap: 3px;
+    padding: 8px 0 0;
   }
 
   .item p {

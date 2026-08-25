@@ -11,6 +11,8 @@ import { loadPaymentQrCode } from "@/lib/repositories/qrCodeRepository";
 import { WorkspaceMeta } from "@/components/WorkspaceMeta";
 import { trackUsageEvent } from "@/lib/analytics/usageAnalytics";
 import { clearSaleContext, closeOpenTableOrder, DiningConfig, loadDiningConfig, loadSaleContext, saveSaleContext, SaleContext } from "@/lib/repositories/diningRepository";
+import { PromotionPicker } from "@/components/PromotionPicker";
+import { calculateDiscount, clearAppliedPromotion, loadAppliedPromotion, loadPromotions, Promotion, saveAppliedPromotion } from "@/lib/repositories/promotionRepository";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -20,8 +22,12 @@ export default function CheckoutPage() {
   const [qrCode, setQrCode] = useState("");
   const [saleContext, setSaleContext] = useState<SaleContext>({ mode: "takeaway" });
   const [tableName, setTableName] = useState("");
-  const due = getCartTotal(items);
-  const canComplete = due > 0 && !isCompleting;
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
+  const subtotal = getCartTotal(items);
+  const discount = calculateDiscount(subtotal, selectedPromotion);
+  const due = subtotal - discount;
+  const canComplete = items.length > 0 && !isCompleting;
 
   useEffect(() => {
     loadCatalog().then((catalog) => {
@@ -32,22 +38,32 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     loadPaymentQrCode().then(setQrCode);
-    Promise.all([loadDiningConfig(), Promise.resolve(loadSaleContext())]).then(([config, context]: [DiningConfig, SaleContext | null]) => {
+    Promise.all([loadDiningConfig(), Promise.resolve(loadSaleContext()), loadPromotions()]).then(([config, context, savedPromotions]: [DiningConfig, SaleContext | null, Promotion[]]) => {
       const current = context ?? { mode: "takeaway" };
       setSaleContext(current);
       if (current.mode === "table") setTableName(config.tables.find((table) => table.id === current.tableId)?.name ?? "Bàn");
+      const activePromotions = savedPromotions.filter((promotion) => promotion.active);
+      const applied = loadAppliedPromotion();
+      setPromotions(activePromotions);
+      setSelectedPromotion(activePromotions.find((promotion) => promotion.id === applied?.id) ?? null);
     });
   }, []);
+
+  function selectPromotion(promotion: Promotion | null) {
+    setSelectedPromotion(promotion);
+    saveAppliedPromotion(promotion);
+  }
 
   const completeCheckout = async () => {
     if (!canComplete) return;
     setIsCompleting(true);
 
     try {
-      await saveOrder(items, method, { mode: saleContext.mode, tableName: tableName || undefined });
+      await saveOrder(items, method, { mode: saleContext.mode, tableName: tableName || undefined, discountVnd: discount, promotionId: selectedPromotion?.id, promotionName: selectedPromotion?.name });
       if (saleContext.mode === "table") await closeOpenTableOrder(saleContext.tableId);
       void trackUsageEvent("order_completed");
       clearCart();
+      clearAppliedPromotion();
       if (saleContext.mode === "table") {
         clearSaleContext();
       } else {
@@ -70,6 +86,7 @@ export default function CheckoutPage() {
         <section className="vp-payment-summary">
           <div className="vp-payment-due"><span>Cần thanh toán</span><strong>{due.toLocaleString("vi-VN")}đ</strong></div>
           <p className="vp-payment-item-count">{items.reduce((sum, item) => sum + item.quantity, 0)} món trong đơn</p>
+          <PromotionPicker promotions={promotions} selected={selectedPromotion} onChange={selectPromotion} />
           <div className="vp-methods">
             <button className={`vp-method ${method === "cash" ? "is-active" : ""}`} onClick={() => setMethod("cash")}>Tiền mặt</button>
             <button className={`vp-method ${method === "transfer" ? "is-active" : ""}`} onClick={() => setMethod("transfer")}>Chuyển khoản (QR)</button>
@@ -84,7 +101,8 @@ export default function CheckoutPage() {
         <aside className="vp-checkout-order-summary">
           <h2>Tóm tắt đơn hàng</h2>
           <ul>{items.map((item) => <li key={item.product.id}><span>{item.quantity}x {item.product.name}</span><strong>{(item.product.priceVnd * item.quantity).toLocaleString("vi-VN")}đ</strong></li>)}</ul>
-          <div><span>Tiền hàng</span><strong>{due.toLocaleString("vi-VN")}đ</strong></div>
+          <div><span>Tiền hàng</span><strong>{subtotal.toLocaleString("vi-VN")}đ</strong></div>
+          {discount > 0 && <div><span>Khuyến mãi{selectedPromotion ? ` · ${selectedPromotion.name}` : ""}</span><strong>-{discount.toLocaleString("vi-VN")}đ</strong></div>}
           <div><span>Thuế VAT (0%)</span><strong>0đ</strong></div>
           <div className="vp-checkout-total"><span>Thanh toán</span><strong>{due.toLocaleString("vi-VN")}đ</strong></div>
         </aside>

@@ -1,0 +1,9 @@
+.picker { margin: 16px 0; padding: 14px; border-radius: 12px; background: #f7f2ec; }
+.heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #3c2a20; font-size: 13px; }
+.heading button { border: 0; background: transparent; color: #c33a2d; font: inherit; font-size: 10px; font-weight: 900; cursor: pointer; }
+.options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.options button { display: grid; gap: 3px; min-height: 55px; border: 1px solid #e3d6cc; border-radius: 10px; background: #fff; padding: 9px 10px; color: #3c2a20; text-align: left; font: inherit; cursor: pointer; }
+.options button strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.options button span { color: #c33a2d; font-size: 12px; font-weight: 900; }
+.options button.active { border-color: #c33a2d; background: #c33a2d; color: #fff; }
+.options button.active span { color: #fff; }
