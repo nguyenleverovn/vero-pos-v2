@@ -27,6 +27,8 @@ export default function ReceiptDetailPage() {
   }, []);
 
   if (order === undefined) return <main className="vp-screen vp-screen--plain" />;
+  const subtotalVnd = order?.subtotalVnd ?? order?.items.reduce((sum, item) => sum + item.priceVnd * item.quantity, 0) ?? 0;
+  const discountVnd = order?.discountVnd ?? 0;
 
   return (
     <>
@@ -50,6 +52,7 @@ export default function ReceiptDetailPage() {
               </li>
             ))}
           </ul>
+          {discountVnd > 0 && <><div className="vp-receipt-detail-method"><span>Tiền hàng</span><b>{subtotalVnd.toLocaleString("vi-VN")}đ</b></div><div className="vp-receipt-detail-method"><span>Khuyến mãi{order.promotionName ? ` · ${order.promotionName}` : ""}</span><b>-{discountVnd.toLocaleString("vi-VN")}đ</b></div></>}
           <div className="vp-receipt-detail-total"><span>Tổng thanh toán</span><strong>{order.totalVnd.toLocaleString("vi-VN")}đ</strong></div>
           <div className="vp-receipt-detail-method"><span>Phương thức</span><b>{order.paymentMethod === "transfer" ? "Chuyển khoản" : "Tiền mặt"}</b></div>
           <div className="vp-receipt-detail-method"><span>Phục vụ</span><b>{order.tableName || "Mang đi"}</b></div>
@@ -79,6 +82,7 @@ export default function ReceiptDetailPage() {
             </div>
           ))}
         </div>
+        {discountVnd > 0 && <div className={styles.breakdown}><p><span>Tiền hàng</span><strong>{subtotalVnd.toLocaleString("vi-VN")}đ</strong></p><p><span>Khuyến mãi{order.promotionName ? ` (${order.promotionName})` : ""}</span><strong>-{discountVnd.toLocaleString("vi-VN")}đ</strong></p></div>}
         <div className={styles.total}>
           <span>TỔNG CỘNG</span>
           <strong>{order.totalVnd.toLocaleString("vi-VN")}đ</strong>

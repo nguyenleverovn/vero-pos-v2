@@ -22,6 +22,10 @@ export type PosOrder = {
   paymentMethod: PaymentMethod;
   items: OrderLine[];
   totalVnd: number;
+  subtotalVnd?: number;
+  discountVnd?: number;
+  promotionId?: string;
+  promotionName?: string;
   serviceMode?: "counter" | "takeaway" | "table";
   tableName?: string;
 };
@@ -39,7 +43,7 @@ function createOrderId() {
   return `order-${Date.now()}`;
 }
 
-export async function saveOrder(items: CartItem[], paymentMethod: PaymentMethod, service?: { mode: "takeaway" | "table"; tableName?: string }): Promise<PosOrder> {
+export async function saveOrder(items: CartItem[], paymentMethod: PaymentMethod, service?: { mode: "takeaway" | "table"; tableName?: string; discountVnd?: number; promotionId?: string; promotionName?: string }): Promise<PosOrder> {
   const database = await openVeroPosDatabase();
   const transaction = database.transaction(STORES.orders, "readwrite");
   const store = transaction.objectStore(STORES.orders);
@@ -48,6 +52,8 @@ export async function saveOrder(items: CartItem[], paymentMethod: PaymentMethod,
     existingOrders.length,
     ...existingOrders.map((order) => order.orderNumber ?? 0)
   ) + 1;
+  const subtotalVnd = getCartTotal(items);
+  const discountVnd = Math.min(subtotalVnd, Math.max(0, Math.round(service?.discountVnd ?? 0)));
   const order: PosOrder = {
     id: createOrderId(),
     orderNumber,
@@ -59,7 +65,11 @@ export async function saveOrder(items: CartItem[], paymentMethod: PaymentMethod,
       priceVnd: item.product.priceVnd,
       quantity: item.quantity
     })),
-    totalVnd: getCartTotal(items),
+    subtotalVnd,
+    discountVnd,
+    promotionId: service?.promotionId,
+    promotionName: service?.promotionName,
+    totalVnd: subtotalVnd - discountVnd,
     serviceMode: service?.mode ?? "takeaway",
     tableName: service?.tableName
   };
