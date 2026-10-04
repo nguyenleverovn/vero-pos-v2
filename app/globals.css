@@ -156,6 +156,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .vp-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 16px 0; }
 .vp-method { min-height: 41px; border: 1px solid var(--vp-border); border-radius: 8px; background: white; color: var(--vp-muted); font-size: 14px; font-weight: 800; }
 .vp-method.is-active { background: var(--vp-primary); border-color: var(--vp-primary); color: white; }
+.vp-checkout-print-choice > strong { display: block; margin-bottom: 8px; font-size: 14px; }
+.vp-checkout-print-choice .vp-methods { margin: 0; }
 .vp-checkout-qr { display: grid; place-items: center; margin-top: 8px; padding: 16px; border: 1px solid var(--vp-border); border-radius: 12px; background: var(--vp-background); }
 .vp-checkout-qr img { width: min(240px, 100%); aspect-ratio: 1; object-fit: contain; border-radius: 10px; background: white; }
 .vp-checkout-qr p { margin: 0; color: var(--vp-muted); font-size: 13px; text-align: center; }

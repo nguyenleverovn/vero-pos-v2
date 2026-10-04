@@ -18,6 +18,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
   const [method, setMethod] = useState<PaymentMethod>("cash");
+  const [printTiming, setPrintTiming] = useState<"now" | "later">("later");
   const [isCompleting, setIsCompleting] = useState(false);
   const [qrCode, setQrCode] = useState("");
   const [saleContext, setSaleContext] = useState<SaleContext>({ mode: "takeaway" });
@@ -28,6 +29,11 @@ export default function CheckoutPage() {
   const discount = calculateDiscount(subtotal, selectedPromotion);
   const due = subtotal - discount;
   const canComplete = items.length > 0 && !isCompleting;
+  const checkoutActionLabel = isCompleting
+    ? "ĐANG LƯU ĐƠN..."
+    : printTiming === "now"
+      ? "HOÀN TẤT & IN HÓA ĐƠN"
+      : "HOÀN TẤT ĐƠN";
 
   useEffect(() => {
     loadCatalog().then((catalog) => {
@@ -59,7 +65,7 @@ export default function CheckoutPage() {
     setIsCompleting(true);
 
     try {
-      await saveOrder(items, method, { mode: saleContext.mode, tableName: tableName || undefined, discountVnd: discount, promotionId: selectedPromotion?.id, promotionName: selectedPromotion?.name });
+      const order = await saveOrder(items, method, { mode: saleContext.mode, tableName: tableName || undefined, discountVnd: discount, promotionId: selectedPromotion?.id, promotionName: selectedPromotion?.name });
       if (saleContext.mode === "table") await closeOpenTableOrder(saleContext.tableId);
       void trackUsageEvent("order_completed");
       clearCart();
@@ -69,7 +75,11 @@ export default function CheckoutPage() {
       } else {
         saveSaleContext({ mode: "takeaway" });
       }
-      router.replace("/");
+      if (printTiming === "now") {
+        router.push(`/receipts/${encodeURIComponent(order.id)}?print=1`);
+      } else {
+        router.replace("/");
+      }
     } finally {
       setIsCompleting(false);
     }
@@ -91,12 +101,19 @@ export default function CheckoutPage() {
             <button className={`vp-method ${method === "cash" ? "is-active" : ""}`} onClick={() => setMethod("cash")}>Tiền mặt</button>
             <button className={`vp-method ${method === "transfer" ? "is-active" : ""}`} onClick={() => setMethod("transfer")}>Chuyển khoản (QR)</button>
           </div>
+          <div className="vp-checkout-print-choice">
+            <strong>In hóa đơn</strong>
+            <div className="vp-methods">
+              <button className={`vp-method ${printTiming === "now" ? "is-active" : ""}`} type="button" aria-pressed={printTiming === "now"} onClick={() => setPrintTiming("now")}>In ngay</button>
+              <button className={`vp-method ${printTiming === "later" ? "is-active" : ""}`} type="button" aria-pressed={printTiming === "later"} onClick={() => setPrintTiming("later")}>In sau</button>
+            </div>
+          </div>
           {method === "transfer" && (
             <div className="vp-checkout-qr">
               {qrCode ? <Image src={qrCode} alt="QR chuyển khoản" width={240} height={240} unoptimized /> : <p>Chưa có QR chuyển khoản. Thêm QR tại trang Hóa đơn.</p>}
             </div>
           )}
-          <button className="vp-primary-button vp-checkout-desktop-action" type="button" disabled={!canComplete} onClick={completeCheckout}>{isCompleting ? "ĐANG LƯU ĐƠN..." : "HOÀN TẤT ĐƠN"}</button>
+          <button className="vp-primary-button vp-checkout-desktop-action" type="button" disabled={!canComplete} onClick={completeCheckout}>{checkoutActionLabel}</button>
         </section>
         <aside className="vp-checkout-order-summary">
           <h2>Tóm tắt đơn hàng</h2>
@@ -107,7 +124,7 @@ export default function CheckoutPage() {
           <div className="vp-checkout-total"><span>Thanh toán</span><strong>{due.toLocaleString("vi-VN")}đ</strong></div>
         </aside>
       </div>
-      <div className="vp-action-panel"><button className="vp-primary-button" type="button" disabled={!canComplete} onClick={completeCheckout}>{isCompleting ? "ĐANG LƯU ĐƠN..." : "HOÀN TẤT ĐƠN"}</button></div>
+      <div className="vp-action-panel"><button className="vp-primary-button" type="button" disabled={!canComplete} onClick={completeCheckout}>{checkoutActionLabel}</button></div>
     </main>
   );
 }

@@ -26,6 +26,14 @@ export default function ReceiptDetailPage() {
     });
   }, []);
 
+  useEffect(() => {
+    if (!order || !new URLSearchParams(window.location.search).has("print")) return;
+
+    window.history.replaceState(window.history.state, "", window.location.pathname);
+    const printTimeout = window.setTimeout(() => window.print(), 100);
+    return () => window.clearTimeout(printTimeout);
+  }, [order]);
+
   if (order === undefined) return <main className="vp-screen vp-screen--plain" />;
   const subtotalVnd = order?.subtotalVnd ?? order?.items.reduce((sum, item) => sum + item.priceVnd * item.quantity, 0) ?? 0;
   const discountVnd = order?.discountVnd ?? 0;
